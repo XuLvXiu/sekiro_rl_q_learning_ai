@@ -1,6 +1,6 @@
 import cv2
 import time
-from window import game_width, game_height, set_windows_offset, game_window, BaseWindow, player_hp_window, boss_hp_window, global_enemy_window
+from window import game_width, game_height, set_windows_offset, game_window, BaseWindow, player_hp_window, boss_hp_window, global_enemy_window, player_posture_window
 import grabscreen
 import signal
 import sys
@@ -9,6 +9,8 @@ import colorsys
 import tkinter as tk
 import utils.change_window as change_window
 from utils.change_window import check_window_resolution_same
+from pynput.keyboard import Listener, Key
+import os
 
 # 标志位，表示是否继续运行
 running = True
@@ -176,6 +178,7 @@ def main_loop():
     # 添加初始变量（示例）
     app.add_variable("player_hp", var_type="float", column="left")
     app.add_variable("boss_hp", var_type="float", column="right")
+    app.add_variable("player_posture", var_type="float", column="left")
 
     '''
     app.add_variable("self_magic", var_type="float", column="left")
@@ -219,6 +222,7 @@ def main_loop():
                 **{
                     "player_hp": player_hp_window.get_status(),
                     "boss_hp": boss_hp_window.get_status(),
+                    'player_posture': player_posture_window.get_status(),
                 }
             )
 
@@ -228,8 +232,22 @@ def main_loop():
 
 
 if __name__ == "__main__":
+    '''
+    def on_press(key):
+        print('on_press: %s' % (key))
+        try:
+            if key == Key.backspace: 
+                os._exit(0)
+        except Exception as e:
+            print(e)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    keyboard_listener = Listener(on_press=on_press)
+    keyboard_listener.start()
+    '''
+
     # 初始化截图工具
-    grabscreen.init_camera(target_fps=6)
+    grabscreen.init_camera(target_fps=13)
     
     # 把游戏窗口前置并移动到屏幕左上角
     change_window.correction_window()
