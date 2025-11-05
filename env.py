@@ -7,7 +7,7 @@ game environment
 print('importing env')
 import grabscreen
 import window
-from window import BaseWindow, global_enemy_window, player_hp_window, boss_hp_window
+from window import BaseWindow, global_enemy_window, player_hp_window, boss_hp_window, player_posture_window
 from utils import change_window
 import torch
 import torchvision.transforms as transforms
@@ -607,6 +607,9 @@ if __name__ == '__main__':
     step_i = 0
     arr_old_class_id = [0, 0]
     arr_images = []
+    last_posture_value = -1
+    max_posture_value = -1
+    is_posture_increased = False
     while True: 
         log.info('main loop running, step_i: %s' % (step_i))
         if not global_is_running: 
@@ -616,6 +619,9 @@ if __name__ == '__main__':
             step_i = 0
             flush()
             arr_images = []
+            last_posture_value = -1
+            max_posture_value = -1
+            is_posture_increased = False
             continue
 
         t1 = time.time()
@@ -657,7 +663,7 @@ if __name__ == '__main__':
                 action_id = env.QUADRUPLE_ATTACK_ACTION_ID
 
             if class_id == 3: 
-                action_id = env.ATTACK_ACTION_ID
+                action_id = env.PARRY_ACTION_ID
 
             if class_id == 4: 
                 # 4 is inaccurate
@@ -665,6 +671,18 @@ if __name__ == '__main__':
         else: 
             action_id = env.PARRY_ACTION_ID
 
+        posture_value = player_posture_window.get_status()
+
+        if posture_value > 25 and posture_value > last_posture_value and posture_value < 75: 
+            max_posture_value = posture_value
+            is_posture_increased = True
+
+        if action_id == env.PARRY_ACTION_ID: 
+            if posture_value < max_posture_value * 0.75 and is_posture_increased: 
+                action_id = env.ATTACK_ACTION_ID
+                is_posture_increased = False
+
+        last_posture_value = posture_value
 
         action_name = env.arr_action_name[action_id]
         log.info('class_id:%s, action_id:%s, action_name: %s' % (class_id, action_id, action_name))
