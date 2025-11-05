@@ -201,6 +201,67 @@ class BloodWindow(GrayWindow):
             '''
 
 
+class PostureWindow(GrayWindow): 
+    def __init__(self, sx, sy, ex, ey, blood_gray_min=100, blood_gray_max=130): 
+        super().__init__(sx, sy, ex, ey)
+        self.blood_gray_min = blood_gray_min
+        self.blood_gray_max = blood_gray_max
+
+        self.hp_count = 0
+        self.full_count = 0
+
+    def process_color(self): 
+        super().process_color()
+        self.status = 0
+        gray = self.gray
+        if gray is not None: 
+            # posture bar is symmetrical, we only use the first half, but the reserved one.
+            middle_row = np.flip(gray[gray.shape[0] // 2, 0:gray.shape[1] // 2])
+            # print('middle_row: ', middle_row)
+            self.full_count = len(middle_row)
+            first_pixel = middle_row[0]
+
+            if first_pixel >= 230: 
+                arr_index = np.where(middle_row > self.blood_gray_max)[0]
+                self.hp_count = len(arr_index)
+                # print(self.hp_count, self.full_count)
+                self.status = (self.hp_count / self.full_count) * 100
+                return
+
+            if not first_pixel in [183, 184, 185]: 
+                self.hp_count = 0
+                self.status = 0
+                # print('first_pixel error:', first_pixel)
+                # cv2.imwrite('self.gray.0.%s.png' % (self.debug_name), self.gray)
+                return
+
+            # print(self.debug_name)
+            arr_index = np.where(middle_row < self.blood_gray_min)[0]
+            if arr_index.size == 0: 
+                '''
+                arr_index = np.where(middle_row > self.blood_gray_max)[0]
+                if arr_index.size > 15: 
+                    self.hp_count = 0
+                    self.status = 0
+                    cv2.imwrite('self.gray.000.%s.png' % (self.debug_name), self.gray)
+                    sys.exit(0)
+                    return
+                '''
+
+                self.hp_count = self.full_count
+                self.status = 100
+                return
+
+            self.hp_count = arr_index[0]
+            self.status = (self.hp_count / self.full_count) * 100
+
+
+            '''
+            print('window update, process_color, status detected:', self.status,
+                    ', count:', count, ', total_length', total_length)
+            '''
+
+
 # 血量窗口 挨打会闪烁红色
 class BloodWindowV2(HLSWindow):
     def __init__(self, sx, sy, ex, ey, blood_gray_min=117, blood_gray_max=255):
@@ -397,6 +458,10 @@ game_window.set_debug_name('game main window')
 # player hp window
 player_hp_window = BloodWindow(*convert_coordinates(71 + 3, 650, 485, 660))
 player_hp_window.set_debug_name('player hp window')
+
+# player posture window
+player_posture_window = PostureWindow(*convert_coordinates(520, 620, 760, 630))
+player_posture_window.set_debug_name('player posture window')
 
 # boss hp window
 boss_hp_window = BloodWindow(*convert_coordinates(72 + 3, 60, 345, 70))
