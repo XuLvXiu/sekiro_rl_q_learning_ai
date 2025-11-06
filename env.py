@@ -442,7 +442,8 @@ class Env(object):
         if not state.is_player_posture_crash: 
             if player_posture < self.player_posture_high * 0.75 and self.is_player_posture_high_happened: 
                 # posture decrease to a reasonable value.
-                self.is_player_posture_high_happened    = False
+                # delay it until after state saved.
+                # self.is_player_posture_high_happened    = False
                 state.is_player_posture_down_ok         = True
 
         # predict class id
@@ -457,6 +458,12 @@ class Env(object):
 
         # save it to state history manager.
         self.state_manager.save(state)
+
+        # try to reset happen status.
+        # if POSTURE_DOWN_STATE_ID not happen, no need to reset it.
+        if state.state_id == self.state_manager.POSTURE_DOWN_STATE_ID: 
+            self.is_player_posture_high_happened = False
+
         # never modify the state from now on.
 
         log.debug('get new state end, hp: %5.2f %5.2f, class_id: %s, state_id: %s, arr_history_class_id: %s, posture: %.1f, is_attack: %s, is_parry_after_attack: %s, num_parry_steps_after_attack: %s, is_player_posture_down_ok: %s, action_space_key: %s' % (state.player_hp, 

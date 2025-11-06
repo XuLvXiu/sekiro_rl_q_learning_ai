@@ -271,7 +271,7 @@ class Trainer:
         (state, action_id, reward, next_state, next_action_id) = sarsa
 
         Q_s = self.Q.get(state).copy()
-        Q_s_next = self.Q.get(next_state)
+        Q_s_next = self.Q.get(next_state).copy()
 
         Q_s_a = Q_s[action_id]
         Q_s_a_next = Q_s_next[next_action_id]
