@@ -25,6 +25,7 @@ import os
 from game_status_window import GameStatus, GameStatusWindow
 from state_manager import State, StateManager
 import shutil
+from rule import Rule
 
 class Env(object): 
     '''
@@ -120,6 +121,13 @@ class Env(object):
         self.is_player_dead = False
         self.player_life = 2
 
+        # player posture
+        self.previous_player_posture            = 0
+        self.is_player_posture_high_happened    = False
+        self.player_posture_high                = 0
+
+        self.rule = Rule()
+
         # the classification model v2
         self.model = None
 
@@ -162,7 +170,6 @@ class Env(object):
         set window offset
         wait for model to load
         '''
-        # self.model only support [IDLE, ATTACK, PARRY, SHIPO]
         self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
         num_classes = 5
         print('num_classes:', num_classes)
@@ -391,6 +398,10 @@ class Env(object):
         self.is_player_dead     = False
         self.player_life        = 2
 
+        self.previous_player_posture            = 0
+        self.is_player_posture_high_happened    = False
+        self.player_posture_high                = 0
+
         self.executor.interrupt_action()
 
 
@@ -415,13 +426,16 @@ class Env(object):
         image = global_enemy_window.color.copy()
         player_hp = player_hp_window.get_status()
         boss_hp = boss_hp_window.get_status()
+        player_posture = player_posture_window.get_status()
 
+        # should we move the codes below to state_manager.py?
         state = State()
         state.image = image
         state.player_hp = player_hp
         state.boss_hp = boss_hp
         state.is_player_hp_down = False
         state.is_boss_hp_down = False
+        state.player_posture = player_posture
 
         player_hp_down = self.previous_player_hp - player_hp 
         boss_hp_down = self.previous_boss_hp - boss_hp
@@ -438,6 +452,22 @@ class Env(object):
         if boss_hp_down > THRESHOLD: 
             state.is_boss_hp_down = True
 
+        if self.previous_player_posture > 50 and state.player_posture == 0: 
+            state.is_player_posture_crash = True
+
+        # check player posture
+        if player_posture >= 25 and player_posture <= 75: 
+            if player_posture > self.previous_player_posture: 
+                # posture increase to a new high value
+                self.player_posture_high                = player_posture
+                self.is_player_posture_high_happened    = True
+
+        if not state.is_player_posture_crash: 
+            if player_posture < self.player_posture_high * 0.75 and self.is_player_posture_high_happened: 
+                # posture decrease to a reasonable value.
+                self.is_player_posture_high_happened    = False
+                state.is_player_posture_down_ok         = True
+
         # predict class id
         inputs = self.transform_state(state)
 
@@ -448,12 +478,32 @@ class Env(object):
             _, predicted = torch.max(outputs, 1)
             state.class_id = predicted.item()
 
+        # populate arr_history_class_id
+        state.arr_history_class_id = self.state_manager.get_all_history_class_id()
+
+        # generate state id, might be changed while saving to manager.
+        state.state_id = self.state_manager.generate_state_id(state)
+
+        # check the state is an attack state.
+        # must after state_id generated
+        if self.rule.is_attack_state(state, self): 
+            state.is_attack = True
+
+        # check the state is a parry state after attack
+        # must after state_id generated
+        if self.rule.is_parry_after_attack_state(state, self): 
+            state.is_parry_after_attack = True
+            last_state = self.state_manager.get_last_state()
+            state.num_parry_steps_after_attack = last_state.num_parry_steps_after_attack + 1
+
         # save it to state history manager.
         self.state_manager.save(state)
         # never modify the state from now on.
 
-        log.debug('get new state end, hp: %5.2f %5.2f, class_id: %s, state_id: %s, arr_history_class_id: %s' % (state.player_hp, 
-            state.boss_hp, state.class_id, state.state_id, state.arr_history_class_id))
+        log.debug('get new state end, hp: %5.2f %5.2f, class_id: %s, state_id: %s, arr_history_class_id: %s, posture: %.1f, is_attack: %s, is_parry_after_attack: %s, num_parry_steps_after_attack: %s, is_player_posture_down_ok: %s' % (state.player_hp, 
+            state.boss_hp, state.class_id, state.state_id, state.arr_history_class_id,
+            state.player_posture, state.is_attack, state.is_parry_after_attack, state.num_parry_steps_after_attack,
+            state.is_player_posture_down_ok))
 
         # update game status
         self.game_status.update_by_state(state)
@@ -479,7 +529,7 @@ class Env(object):
         is_done = self.check_done(new_state)
         (reward, log_reward) = self.cal_reward(new_state, action_id)
 
-        log.debug('new step end, hp[%s][%s] previous_hp[%s][%s] is_done[%s], is_dead[%s][%s], player_life[%s], reward[%s %s]' % (new_state.player_hp, new_state.boss_hp, 
+        log.debug('new step end, hp[%.2f][%.2f] previous_hp[%.2f][%.2f] is_done[%s], is_dead[%s][%s], player_life[%s], reward[%s %s]' % (new_state.player_hp, new_state.boss_hp, 
             self.previous_player_hp, self.previous_boss_hp,
             is_done, self.is_player_dead, self.is_boss_dead,
             self.player_life,
@@ -499,6 +549,7 @@ class Env(object):
 
         player_hp = new_state.player_hp
         boss_hp = new_state.boss_hp
+        player_posture = new_state.player_posture
 
         log_reward += 'game action:%s,' % (action_id)
         
@@ -526,8 +577,13 @@ class Env(object):
                 reward -= 5
                 log_reward += 'boss_hp=,'
 
+        if new_state.is_player_posture_crash: 
+            reward -= 30
+            log_reward += 'player_posture_crash'
+
         self.previous_player_hp = player_hp
         self.previous_boss_hp = boss_hp
+        self.previous_player_posture = player_posture
 
         return (reward, log_reward)
 
@@ -607,9 +663,9 @@ if __name__ == '__main__':
     step_i = 0
     arr_old_class_id = [0, 0]
     arr_images = []
-    last_posture_value = -1
-    max_posture_value = -1
-    is_posture_increased = False
+    previous_player_posture = -1
+    player_posture_high = -1
+    is_player_posture_high_happened = False
     while True: 
         log.info('main loop running, step_i: %s' % (step_i))
         if not global_is_running: 
@@ -619,9 +675,9 @@ if __name__ == '__main__':
             step_i = 0
             flush()
             arr_images = []
-            last_posture_value = -1
-            max_posture_value = -1
-            is_posture_increased = False
+            previous_player_posture = -1
+            player_posture_high = -1
+            is_player_posture_high_happened = False
             continue
 
         t1 = time.time()
@@ -671,18 +727,18 @@ if __name__ == '__main__':
         else: 
             action_id = env.PARRY_ACTION_ID
 
-        posture_value = player_posture_window.get_status()
+        player_posture = player_posture_window.get_status()
 
-        if posture_value > 25 and posture_value > last_posture_value and posture_value < 75: 
-            max_posture_value = posture_value
-            is_posture_increased = True
+        if player_posture > 25 and player_posture > previous_player_posture and player_posture < 75: 
+            player_posture_high = player_posture
+            is_player_posture_high_happened = True
 
-        if action_id == env.PARRY_ACTION_ID: 
-            if posture_value < max_posture_value * 0.75 and is_posture_increased: 
+        if action_id == env.PARRY_ACTION_ID and class_id == 0: 
+            if player_posture < player_posture_high * 0.75 and is_player_posture_high_happened: 
                 action_id = env.ATTACK_ACTION_ID
-                is_posture_increased = False
+                is_player_posture_high_happened = False
 
-        last_posture_value = posture_value
+        previous_player_posture = player_posture
 
         action_name = env.arr_action_name[action_id]
         log.info('class_id:%s, action_id:%s, action_name: %s' % (class_id, action_id, action_name))

@@ -16,8 +16,21 @@ class State():
         self.image              = None
         self.player_hp          = 0
         self.boss_hp            = 0
+        self.player_posture     = 0
         self.is_player_hp_down  = False
         self.is_boss_hp_down    = False
+
+        self.is_player_posture_crash    = False
+
+        # if posture down to a reasonable value from former high value.
+        self.is_player_posture_down_ok  = False
+
+        # if an attack state / parry after attack state
+        self.is_attack                  = False
+        self.is_parry_after_attack      = False
+
+        # the number of consecutive parry steps after the attack step.
+        self.num_parry_steps_after_attack = 0
 
         # if the boss attacks the player, and the player's hp drop slightly, < 10 for example.
         self.is_player_hp_down_slightly = False
@@ -91,6 +104,32 @@ class StateManager():
         self.PLAYER_HP_DOWN_STATE_ID    = 5
         self.HULU_STATE_ID              = 6
 
+        # more extra states
+        self.POSTURE_DOWN_STATE_ID      = 10
+
+        # more extra states
+        self.PARRY_AFTER_ATTACK_STATE_ID_1  = 11
+        self.PARRY_AFTER_ATTACK_STATE_ID_2  = 12
+        self.PARRY_AFTER_ATTACK_STATE_ID_3  = 13
+        self.PARRY_AFTER_ATTACK_STATE_ID_4  = 14
+        self.PARRY_AFTER_ATTACK_STATE_ID_5  = 15
+        self.PARRY_AFTER_ATTACK_STATE_ID_6  = 16
+        self.PARRY_AFTER_ATTACK_STATE_ID_7  = 17
+        self.PARRY_AFTER_ATTACK_STATE_ID_8  = 18
+        self.PARRY_AFTER_ATTACK_STATE_ID_9  = 19
+
+        self.arr_parry_after_attack_state_id = [
+            self.PARRY_AFTER_ATTACK_STATE_ID_1,
+            self.PARRY_AFTER_ATTACK_STATE_ID_2,
+            self.PARRY_AFTER_ATTACK_STATE_ID_3,
+            self.PARRY_AFTER_ATTACK_STATE_ID_4,
+            self.PARRY_AFTER_ATTACK_STATE_ID_5,
+            self.PARRY_AFTER_ATTACK_STATE_ID_6,
+            self.PARRY_AFTER_ATTACK_STATE_ID_7,
+            self.PARRY_AFTER_ATTACK_STATE_ID_8,
+            self.PARRY_AFTER_ATTACK_STATE_ID_9,
+        ]
+
 
     def save(self, state): 
         '''
@@ -101,11 +140,14 @@ class StateManager():
             # remove the first one (oldest one)
             self.arr_state.pop(0)
 
-        # populate arr_history_class_id
-        state.arr_history_class_id = self.get_all_history_class_id()
+        # the last opportunity to generate extra state id
+        value = self.generate_extra_state_id(state)
+        if value is not None: 
+            state.state_id = value
+            log.debug('generate_extra_state_id, state_id: %s(history num: %s)' % (state.state_id, 
+                state.num_parry_steps_after_attack))
 
-        # generate state id
-        state.state_id = self.generate_state_id(state)
+        # the final state id
         state.final_state_id = state.state_id
 
         # save it, at last.
@@ -134,6 +176,14 @@ class StateManager():
             state_id = self.PLAYER_HP_DOWN_STATE_ID
             log.debug('extra state player_hp_down %s' % (state_id))
             return state_id
+
+        # if posture down to a reasonable value
+        if state.is_player_posture_down_ok: 
+            if state.class_id == state.NORMAL_CLASS_ID: 
+                state_id = self.POSTURE_DOWN_STATE_ID
+                log.debug('extra state posture down, state_id:%s' % (state_id))
+                return state_id
+
 
         # default case, use the class id derived from the classification model.
         # some classes need to check signal strength
@@ -171,4 +221,28 @@ class StateManager():
         state_id = self.NORMAL_STATE_ID
         log.debug('signal_strength NOT big enough, fall back to default state_id[%s]' % (state_id))
         return state_id
+
+
+    def generate_extra_state_id(self, state): 
+        '''
+        if this state is a parry state and after attack
+        '''
+        if state.num_parry_steps_after_attack == 0: 
+            return None
+
+        # [10, 20 ..., 80]
+        arr_threshold = [i * 10 for i in range(1, 9)]
+
+        for i in range(0, len(arr_threshold)): 
+            if state.num_parry_steps_after_attack < arr_threshold[i]: 
+                return self.arr_parry_after_attack_state_id[i]
+
+        return self.arr_parry_after_attack_state_id[-1]
+
+
+    def get_last_state(self): 
+        '''
+        get the last state from history array
+        '''
+        return self.arr_state[-1]
 
