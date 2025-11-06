@@ -35,19 +35,54 @@ class Trainer:
         self.env = Env()
         self.env.train()
 
-        # number of actions to be explored.
-        self.action_space = self.env.action_space
+        # possible actions to be explored in RF
+        self.obj_possible_action_id = {
+            'simple_attack': [
+                self.env.ATTACK_ACTION_ID, 
+                self.env.DOUBLE_ATTACK_ACTION_ID, 
+                self.env.TRIPLE_ATTACK_ACTION_ID,
+                self.env.QUADRUPLE_ATTACK_ACTION_ID,
+            ],
+            'shipo_attack': [
+                self.env.SHIPO_ATTACK_ACTION_ID,
+                self.env.SHIPO_DOUBLE_ATTACK_ACTION_ID,
+                self.env.SHIPO_TRIPLE_ATTACK_ACTION_ID,
+            ],
+            'parry': [
+                self.env.PARRY_ACTION_ID,
+            ],
+            'player_hp_down': [
+                self.env.STAND_UP_ACTION_ID,
+            ],
+            'hulu': [
+                self.env.TAKE_HULU_ACTION_ID,
+            ],
+            'player_posture_down': [
+                self.env.PARRY_ACTION_ID,
+                self.env.ATTACK_ACTION_ID, 
+                self.env.DOUBLE_ATTACK_ACTION_ID, 
+            ],
+            'parry_after_attack': [
+                self.env.PARRY_ACTION_ID,
+            ],
+            'default': [
+                self.env.PARRY_ACTION_ID,
+            ],
+        }
+
+        self.obj_action_space = {}
+        for k,v in self.obj_possible_action_id.items(): 
+            self.obj_action_space[k] = len(v)
 
         # TD paramaters
         # the length of Q[s] and N[s] 
         # should be number of actions to be explored + number of actions not to be explored
-        d2_length = self.env.action_space + self.env.RULE_COUNT
-        self.Q = Storage(d2_length)
+        self.Q = Storage(self.obj_action_space)
         self.GAMMA = 0.85
         self.ALPHA = 0.5
 
         # extra paramaters for debug
-        self.N = Storage(d2_length)
+        self.N = Storage(self.obj_action_space)
 
         # episode parameters
         self.MAX_EPISODES = 1000
@@ -94,13 +129,14 @@ class Trainer:
         '''
         select an action by state using Q
         '''
+        action_space = self.obj_action_space[state.action_space_key]
         if self.Q.has(state): 
             log.info('select_action_using_Q: state[%s] found, using epsilon-greedy' % (str(self.Q.convert_state_to_key(state))))
             Q_s = self.Q.get(state)
-            probs = self.get_probs(Q_s, epsilon)
+            probs = self.get_probs(Q_s, epsilon, action_space)
             log.info('Q_s: %s' % (Q_s))
             log.info('probs: %s' % (probs))
-            action_id = np.random.choice(self.action_space, p=probs)
+            action_id = np.random.choice(action_space, p=probs)
             '''
             # only train some states
             ########################################
@@ -113,7 +149,7 @@ class Trainer:
 
         # if Q does not have state, use random
         log.info('select_action_using_Q: state[%s] not found, using random' % (str(self.Q.convert_state_to_key(state))))
-        action_id = np.random.randint(0, self.action_space)
+        action_id = np.random.randint(0, action_space)
         return action_id
 
 
@@ -122,10 +158,6 @@ class Trainer:
         select an action by state using Q, model and rules.
         '''
         # rules: 
-        # state-5
-        # state-6
-        # state-0: class-0
-        # state-4: class-4
         obj_rule = Rule()
         action_id = obj_rule.apply(state, self.env)
         if action_id is not None: 
@@ -133,7 +165,6 @@ class Trainer:
             return action_id
 
         # Q: 
-        # state-1/2/3: class-1/2/3
         action_id = self.select_action_using_Q(state, epsilon)
         return action_id
 
@@ -185,8 +216,8 @@ class Trainer:
 
             # take action(A), get reward(R) and next state(S')
             # at first, convert rf action_id to game action_id
-            game_action_id = self.env.arr_possible_action_id[action_id]
-            log.info('convert rl action_id[%s] to game action id[%s]' % (action_id, game_action_id))
+            game_action_id = self.obj_possible_action_id[state.action_space_key][action_id]
+            log.info('convert rl action_space_key[%s] action_id[%s] to game action id[%s]' % (state.action_space_key, action_id, game_action_id))
             next_state, reward, is_done = env.step(game_action_id)
 
             # get next action(A') by next_state(S') using Q
@@ -217,18 +248,18 @@ class Trainer:
         self.env.update_game_status_window()
 
 
-    def get_probs(self, Q_s, epsilon): 
+    def get_probs(self, Q_s, epsilon, action_space): 
         '''
         obtain the action probabilities related to the epsilon-greedy policy.
         '''
-        ones = np.ones(self.action_space)
+        ones = np.ones(action_space)
         # default action probability
-        policy_s = ones * epsilon / self.action_space
+        policy_s = ones * epsilon / action_space
 
         # best action probability
-        a_star = np.argmax(Q_s[:self.action_space])
+        a_star = np.argmax(Q_s)
         log.info('a_star: %s' % (a_star))
-        policy_s[a_star] = 1 - epsilon + epsilon / self.action_space
+        policy_s[a_star] = 1 - epsilon + epsilon / action_space
 
         return policy_s
 

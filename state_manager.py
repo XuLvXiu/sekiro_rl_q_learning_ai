@@ -4,6 +4,8 @@ state and manager
 '''
 
 from log import log
+from rule import Rule
+
 class State(): 
     '''
     state
@@ -30,6 +32,8 @@ class State():
         self.is_parry_after_attack      = False
 
         # the number of consecutive parry steps after the attack step.
+        # state-10 not included, since it may parry or attack.
+        # we will treat it as state-5/6
         self.num_parry_steps_after_attack = 0
 
         # if the boss attacks the player, and the player's hp drop slightly, < 10 for example.
@@ -63,6 +67,9 @@ class State():
         # state id with more data.
         # it equals to state id actually
         self.final_state_id     = None
+
+        # the key of action space obj
+        self.action_space_key   = 'default'
 
 
     def get_final_state_id(self): 
@@ -130,6 +137,8 @@ class StateManager():
             self.PARRY_AFTER_ATTACK_STATE_ID_9,
         ]
 
+        self.rule = Rule()
+
 
     def save(self, state): 
         '''
@@ -140,6 +149,12 @@ class StateManager():
             # remove the first one (oldest one)
             self.arr_state.pop(0)
 
+        # populate arr_history_class_id
+        state.arr_history_class_id = self.get_all_history_class_id()
+
+        # generate state id, might be changed later.
+        state.state_id = self.generate_state_id(state)
+
         # the last opportunity to generate extra state id
         value = self.generate_extra_state_id(state)
         if value is not None: 
@@ -149,6 +164,9 @@ class StateManager():
 
         # the final state id
         state.final_state_id = state.state_id
+
+        # generate action space key
+        state.action_space_key = self.rule.generate_action_space_key(state, self)
 
         # save it, at last.
         self.arr_state.append(state)
@@ -227,6 +245,12 @@ class StateManager():
         '''
         if this state is a parry state and after attack
         '''
+        # check the state is a parry state after attack
+        if self.rule.is_parry_after_attack_state(state, self): 
+            state.is_parry_after_attack = True
+            last_state = self.get_last_state()
+            state.num_parry_steps_after_attack = last_state.num_parry_steps_after_attack + 1
+
         if state.num_parry_steps_after_attack == 0: 
             return None
 
@@ -245,4 +269,5 @@ class StateManager():
         get the last state from history array
         '''
         return self.arr_state[-1]
+
 

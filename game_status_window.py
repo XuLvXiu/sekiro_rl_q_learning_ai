@@ -30,8 +30,6 @@ class GameStatus():
         self.boss_hp                = state.boss_hp
         self.is_player_hp_down      = state.is_player_hp_down
         self.is_boss_hp_down        = state.is_boss_hp_down
-        # this is next state after taking action.
-        # self.state_id               = state.cluster_class']
 
 
 class GameStatusWindow(): 

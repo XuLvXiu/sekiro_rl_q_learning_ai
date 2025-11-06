@@ -25,7 +25,6 @@ import os
 from game_status_window import GameStatus, GameStatusWindow
 from state_manager import State, StateManager
 import shutil
-from rule import Rule
 
 class Env(object): 
     '''
@@ -83,32 +82,6 @@ class Env(object):
         # state manager
         self.state_manager = StateManager()
 
-        # possible actions to be explored in RF
-        # should we put them to train.py?
-        self.arr_possible_action_id = [
-            # 0-3
-            self.ATTACK_ACTION_ID, 
-            self.DOUBLE_ATTACK_ACTION_ID, 
-            self.TRIPLE_ATTACK_ACTION_ID,
-            self.QUADRUPLE_ATTACK_ACTION_ID,
-
-            # 4-6 
-            self.SHIPO_ATTACK_ACTION_ID,
-            self.SHIPO_DOUBLE_ATTACK_ACTION_ID,
-            self.SHIPO_TRIPLE_ATTACK_ACTION_ID,
-
-            # 7-9
-            # do NOT change the order or the position of these last 3 actions
-            # these actions will not be explored.
-            self.PARRY_ACTION_ID,
-            self.STAND_UP_ACTION_ID,
-            self.TAKE_HULU_ACTION_ID,
-        ]
-
-        # the last three actions will not be explored
-        self.RULE_COUNT = 3
-        self.action_space = len(self.arr_possible_action_id) - self.RULE_COUNT
-
         # training mode and eval mode have different HP threshold
         self.MODE_TRAIN = 'MODE_TRAIN'
         self.MODE_EVAL  = 'MODE_EVAL'
@@ -125,8 +98,6 @@ class Env(object):
         self.previous_player_posture            = 0
         self.is_player_posture_high_happened    = False
         self.player_posture_high                = 0
-
-        self.rule = Rule()
 
         # the classification model v2
         self.model = None
@@ -334,6 +305,12 @@ class Env(object):
         # how about player damage taken?
         if self.is_attack(action_id): 
             # should check boss hp down or attack was blocked, to avoid sleep too long.
+
+            # since it is an attack, we will mark it.
+            # it will be used by the following parry states.
+            last_state = self.state_manager.get_last_state()
+            last_state.is_attack = True
+            last_state.is_parry_after_attack = False
             time.sleep(0.8)
 
 
@@ -478,32 +455,14 @@ class Env(object):
             _, predicted = torch.max(outputs, 1)
             state.class_id = predicted.item()
 
-        # populate arr_history_class_id
-        state.arr_history_class_id = self.state_manager.get_all_history_class_id()
-
-        # generate state id, might be changed while saving to manager.
-        state.state_id = self.state_manager.generate_state_id(state)
-
-        # check the state is an attack state.
-        # must after state_id generated
-        if self.rule.is_attack_state(state, self): 
-            state.is_attack = True
-
-        # check the state is a parry state after attack
-        # must after state_id generated
-        if self.rule.is_parry_after_attack_state(state, self): 
-            state.is_parry_after_attack = True
-            last_state = self.state_manager.get_last_state()
-            state.num_parry_steps_after_attack = last_state.num_parry_steps_after_attack + 1
-
         # save it to state history manager.
         self.state_manager.save(state)
         # never modify the state from now on.
 
-        log.debug('get new state end, hp: %5.2f %5.2f, class_id: %s, state_id: %s, arr_history_class_id: %s, posture: %.1f, is_attack: %s, is_parry_after_attack: %s, num_parry_steps_after_attack: %s, is_player_posture_down_ok: %s' % (state.player_hp, 
+        log.debug('get new state end, hp: %5.2f %5.2f, class_id: %s, state_id: %s, arr_history_class_id: %s, posture: %.1f, is_attack: %s, is_parry_after_attack: %s, num_parry_steps_after_attack: %s, is_player_posture_down_ok: %s, action_space_key: %s' % (state.player_hp, 
             state.boss_hp, state.class_id, state.state_id, state.arr_history_class_id,
             state.player_posture, state.is_attack, state.is_parry_after_attack, state.num_parry_steps_after_attack,
-            state.is_player_posture_down_ok))
+            state.is_player_posture_down_ok, state.action_space_key))
 
         # update game status
         self.game_status.update_by_state(state)

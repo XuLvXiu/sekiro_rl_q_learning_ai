@@ -7,7 +7,7 @@ Q = {
     state_key_2: [0, 0, 0, 0, ...],
     ....
 }
-the length of the array is action_space.
+the length of the array is action_space(may be different for each key).
 '''
 from collections import defaultdict
 import json
@@ -18,13 +18,12 @@ class Storage:
     storage schema for Q and N
     '''
 
-    def __init__(self, d2_length): 
+    def __init__(self, obj_action_space): 
         '''
         init
         '''
-        # self.obj = defaultdict(lambda: np.zeros(d2_length))
         self.obj = {}
-        self.d2_length = d2_length
+        self.obj_action_space = obj_action_space
 
 
     def convert_state_to_key(self, state): 
@@ -51,7 +50,8 @@ class Storage:
         '''
         key = self.convert_state_to_key(state)
         if key not in self.obj: 
-            self.obj[key] = np.zeros(self.d2_length)
+            d2_length = self.obj_action_space[state.action_space_key]
+            self.obj[key] = np.zeros(d2_length)
 
         return self.obj[key]
 
@@ -62,7 +62,9 @@ class Storage:
         '''
         key = self.convert_state_to_key(state)
         if key not in self.obj: 
-            self.obj[key] = np.zeros(self.d2_length)
+            d2_length = self.obj_action_space[state.action_space_key]
+            self.obj[key] = np.zeros(d2_length)
+
         self.obj[key][action_id] = value
 
 
