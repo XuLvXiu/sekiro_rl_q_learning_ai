@@ -429,7 +429,7 @@ class Env(object):
         if boss_hp_down > THRESHOLD: 
             state.is_boss_hp_down = True
 
-        if self.previous_player_posture > 50 and state.player_posture == 0: 
+        if self.previous_player_posture > 50 and state.player_posture < 1: 
             state.is_player_posture_crash = True
 
         # check player posture
@@ -440,11 +440,15 @@ class Env(object):
                 self.is_player_posture_high_happened    = True
 
         if not state.is_player_posture_crash: 
+            # posture not crash
             if player_posture < self.player_posture_high * 0.75 and self.is_player_posture_high_happened: 
                 # posture decrease to a reasonable value.
                 # delay it until after state saved.
                 # self.is_player_posture_high_happened    = False
                 state.is_player_posture_down_ok         = True
+        else: 
+            # posture crash
+            state.is_player_posture_high_happened   = False
 
         # predict class id
         inputs = self.transform_state(state)
