@@ -508,7 +508,7 @@ class Env(object):
         '''
         calculate the reward according to the action take and the new state
 
-        打法: 立足防御，识别 boss 的 3个招式(1突刺危、2擒拿危擒擒又拿拿、3飞渡浮舟)，利用破绽进行尽可能多的连击
+        打法: 立足防御，识别 boss 的 3个招式(1突刺危、2擒拿危擒擒又拿拿、3飞渡浮舟)，利用破绽进行尽可能多的连击，自身架势值不高的时候鼓励进攻
         '''
         reward = 10
         log_reward = '.'
@@ -530,17 +530,31 @@ class Env(object):
 
         if new_state.is_boss_hp_down: 
             reward += 30
-            log_reward += 'boss_hp-,'
+            attack_count = int((self.previous_boss_hp - boss_hp) / 4)
+            reward += (attack_count - 1) * 10
+            log_reward += 'boss_hp-,attack_count:%s,' % (attack_count)
+
             if not self.is_attack(action_id): 
-                # the player is stunned when it pressed the left mouse button, 
+                # sometimes, the player is stunned when it pressed the left mouse button, 
                 # after one or two steps, then the attack occurs.
                 log.error('error: boss_hp-, but player is NOT attack')
                 self.game_status.error = 'delayed boss_hp-'
                 self.update_game_status_window()
+            else: 
+                if player_posture < 50: 
+                    reward += 10
+                    log_reward += 'low_posture_effective_attack,'
         else: 
             if self.is_attack(action_id): 
                 # even the boss-hp is not changed, player can interrupt boss-combo, or increase the posture of the boss.
-                reward -= 5
+                # however, attack will lose the opportunity to decrease player posture.
+                if player_posture < 50: 
+                    reward += 10
+                    log_reward += 'low_posture_ineffective_attack,'
+                else: 
+                    reward -= 5
+                    log_reward += 'high_posture_ineffective_attack,'
+
                 log_reward += 'boss_hp=,'
 
         if new_state.is_player_posture_crash: 
