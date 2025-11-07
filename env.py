@@ -448,7 +448,7 @@ class Env(object):
                 state.is_player_posture_down_ok         = True
         else: 
             # posture crash
-            state.is_player_posture_high_happened   = False
+            self.is_player_posture_high_happened   = False
 
         # predict class id
         inputs = self.transform_state(state)
@@ -545,14 +545,14 @@ class Env(object):
                 self.game_status.error = 'delayed boss_hp-'
                 self.update_game_status_window()
             else: 
-                if player_posture < 50: 
+                if self.previous_player_posture < 50: 
                     reward += 10
                     log_reward += 'low_posture_effective_attack,'
         else: 
             if self.is_attack(action_id): 
                 # even the boss-hp is not changed, player can interrupt boss-combo, or increase the posture of the boss.
                 # however, attack will lose the opportunity to decrease player posture.
-                if player_posture < 50: 
+                if self.previous_player_posture < 50: 
                     reward += 10
                     log_reward += 'low_posture_ineffective_attack,'
                 else: 

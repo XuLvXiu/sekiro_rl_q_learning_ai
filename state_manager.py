@@ -258,7 +258,7 @@ class StateManager():
         arr_threshold = [i * 10 for i in range(1, 9)]
 
         for i in range(0, len(arr_threshold)): 
-            if state.num_parry_steps_after_attack < arr_threshold[i]: 
+            if state.num_parry_steps_after_attack <= arr_threshold[i]: 
                 return self.arr_parry_after_attack_state_id[i]
 
         return self.arr_parry_after_attack_state_id[-1]
