@@ -10,9 +10,9 @@
 
 ## 演示视频
 
-三周目白金的时序差分 Sarsa 狼 再战 稀世强者苇名弦一郎
+三周目白金的时序差分 Q-Learning 狼 再战 稀世强者苇名弦一郎
 
-https://www.bilibili.com/video/BV1DA16BkE5H/
+https://www.bilibili.com/video//
 
 ## 游戏设置
 
@@ -80,9 +80,10 @@ state-11-19 是指攻击之后处于防御状态的几个step的分段，主要�
 这几个 states 不需要探索 action，直接使用预定义的处理规则即可。
 
 
-state-10 是指 player posture 从高点下降了一些，如果此时是防御状态，或许可以尝试攻击。
+之前都是 boss 先出招，player 作出应对。现在尝试一下主动进攻，时机应该是boss攻击结束之后，且未准备发动下一次进攻，但是此时机用程序很难判断。
+state-10 是指 player posture 从高点下降了一些，有可能 boss 的攻势彻底停止了，如果此时 player 是防御状态，或许可以尝试攻击。
 
-
+寻找新状态的这个过程，有点像是在做特征工程，需要开脑洞。
 
 从最终结果来看，这种状态定义方式已经比较合理了，但不够全面，未能完整反映出游戏中的真实情况。
 
@@ -109,36 +110,7 @@ state-10 是指 player posture 从高点下降了一些，如果此时是防御�
 `python test.py`
 
 
-- 收集数据
-
-`python data_collector.py`
-
-按 ] 键开始收集;
-
-所谓的收集，就是在玩家打游戏的过程中，定期对游戏屏幕的 boss 区域进行截屏(301x301)，以 list 的形式保存在内存中。
-
-一个 episode 结束的时候，内存中的数据集会被保存到硬盘目录 `images/original` 中。
-
-按 Backspace 键，退出程序
-
-如果在命令行中使用了 `--new` 参数，会首先清除 images/original 目录
-
-
-- 人工打标记
-
-把 images/original 中的图片按照不同的招式挑选出来放到 `images/move` 目录中的 0-4 子目录中。
-
-在仓库中我们已经提供了自己的 move 目录的压缩包 move.zip
-
-
-- 训练分类模型
-
-`python train_classifier.py` 
-
-它会切分训练集与测试集并训练一个 resnet18 分类模型，并在测试集上评估模型的效果。 
-
-
-- 训练 Sarsa policy
+- 训练 Q-Learning policy
 
 `python train.py`
 
@@ -146,7 +118,7 @@ state-10 是指 player posture 从高点下降了一些，如果此时是防御�
 
 进入游戏后，按 q 键锁定 boss，按 ] 键开始正式的训练。
 
-如果在命令行中使用了 `--new` 参数，会从第 0 个 episode 开始重新训练。
+如果在命令行中使用了 `--new` 参数，则会从第 0 个 episode 开始重新训练。
 
 每一个 episode 结束之后，把 Q 与 N 保存到 checkpoint 文件中。
 
@@ -182,11 +154,8 @@ python main.py
 ## 人工备份
 
 模型的训练过程与结果主要涉及到如下的几个文件：
-- images/original	            收集到的截屏图像文件
-- images/move   人工标记后的图像文件
 - checkpoint.json		记录了当前是哪个 episode，以及完成训练时的时间。
 - checkpoint.pkl		存储了 Q 与 N
-- model.resnet.v2   分类模型
 
 
 如果要训练新模型的话，可能需要对老模型的这些数据进行备份。
@@ -198,6 +167,7 @@ python main.py
 - https://github.com/analoganddigital/DQN_play_sekiro
 - https://github.com/Sentdex/pygta5
 - https://github.com/RongKaiWeskerMA/sekiro_play
+- https://github.com/louisnino/RLcode
 
 - https://www.lapis.cafe/posts/ai-and-deep-learning/%E4%BD%BF%E7%94%A8resnet%E8%AE%AD%E7%BB%83%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B
 - https://blog.csdn.net/qq_36795658/article/details/100533639

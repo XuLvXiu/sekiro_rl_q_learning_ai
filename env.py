@@ -499,9 +499,7 @@ class Env(object):
         is_done = self.check_done(new_state)
         (reward, log_reward) = self.cal_reward(new_state, action_id)
 
-        log.debug('new step end, hp[%.2f][%.2f] previous_hp[%.2f][%.2f] is_done[%s], is_dead[%s][%s], player_life[%s], reward[%s %s]' % (new_state.player_hp, new_state.boss_hp, 
-            self.previous_player_hp, self.previous_boss_hp,
-            is_done, self.is_player_dead, self.is_boss_dead,
+        log.debug('new step end, is_done[%s], is_dead[%s][%s], player_life[%s], reward[%s %s]' % (is_done, self.is_player_dead, self.is_boss_dead,
             self.player_life,
             reward, log_reward))
 

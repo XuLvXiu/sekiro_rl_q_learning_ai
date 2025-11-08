@@ -1,6 +1,7 @@
 #encoding=utf8
 
 import tkinter as tk
+import time
 
 class GameStatus(): 
     '''
@@ -20,6 +21,8 @@ class GameStatus():
         self.episode            = 0
         self.error              = ''
         self.mode               = ''
+        self.is_player_hp_down  = False
+        self.is_boss_hp_down    = False
 
 
     def update_by_state(self, state): 
@@ -56,6 +59,9 @@ class GameStatusWindow():
         self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
         # frames
+        self.top_frame = tk.Frame(self.root)
+        self.top_frame.pack(side=tk.TOP, padx=10, pady=10)
+
         self.left_frame = tk.Frame(self.root)
         self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
 
@@ -66,8 +72,8 @@ class GameStatusWindow():
         self.variables  = {}
         self.labels     = {}
 
-        self.add_lable('is_ai', self.left_frame)
-        self.add_lable('empty', self.right_frame)
+        self.add_lable('is_ai', self.top_frame)
+        # self.add_lable('empty', self.right_frame)
 
         self.add_lable('state_id', self.left_frame)
         self.add_lable('action_name', self.right_frame)
@@ -102,14 +108,16 @@ class GameStatusWindow():
         '''
         key = 'is_ai'
         if self.game_status.is_ai: 
-            self.variables[key].set('AI')
+            self.variables[key].set('Q-Learning AI')
             self.labels[key].config(fg='blue')
         else: 
             self.variables[key].set('人工')
             self.labels[key].config(fg='black')
 
+        '''
         key = 'empty'
         self.variables[key].set('')
+        '''
 
         key = 'action_name'
         self.variables[key].set('%s' % (self.game_status.action_name))
@@ -146,3 +154,10 @@ class GameStatusWindow():
         self.root.update()
 
 
+if __name__ == '__main__': 
+    game_status = GameStatus()
+    game_status.is_ai = True
+    window = GameStatusWindow(game_status)
+    while True: 
+        time.sleep(0.5)
+        window.update()
