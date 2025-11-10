@@ -23,6 +23,7 @@ class GameStatus():
         self.mode               = ''
         self.is_player_hp_down  = False
         self.is_boss_hp_down    = False
+        self.player_posture     = 0
 
 
     def update_by_state(self, state): 
@@ -33,6 +34,7 @@ class GameStatus():
         self.boss_hp                = state.boss_hp
         self.is_player_hp_down      = state.is_player_hp_down
         self.is_boss_hp_down        = state.is_boss_hp_down
+        self.player_posture         = state.player_posture
 
 
 class GameStatusWindow(): 
@@ -53,7 +55,7 @@ class GameStatusWindow():
         y = self.root.winfo_screenheight() - h - 100
 
         w = 600
-        h = 250
+        h = 300
         x = -1
         y = 720
         self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
@@ -72,31 +74,32 @@ class GameStatusWindow():
         self.variables  = {}
         self.labels     = {}
 
-        self.add_lable('is_ai', self.top_frame)
-        # self.add_lable('empty', self.right_frame)
+        self.add_label('is_ai', self.top_frame)
 
-        self.add_lable('state_id', self.left_frame)
-        self.add_lable('action_name', self.right_frame)
+        self.add_label('state_id', self.left_frame)
+        self.add_label('action_name', self.right_frame)
 
-        self.add_lable('player_hp', self.left_frame)
-        self.add_lable('boss_hp', self.right_frame)
+        self.add_label('player_hp', self.left_frame)
+        self.add_label('boss_hp', self.right_frame)
 
-        self.add_lable('episode', self.left_frame)
+        self.add_label('player_posture', self.left_frame)
+        self.add_label('empty', self.right_frame)
 
-        self.add_lable('error', self.right_frame)
+        self.add_label('episode', self.left_frame)
+        self.add_label('error', self.right_frame)
 
         # data source
         self.game_status = game_status
 
 
-    def add_lable(self, key, frame): 
+    def add_label(self, key, frame): 
         '''
         add a new label to the frame
         '''
         self.variables[key] = tk.StringVar()
         self.labels[key] = tk.Label(frame, textvariable=self.variables[key])
         self.labels[key].config(font=('Consolas', 16))
-        if key == 'is_ai' or key == 'empty': 
+        if key == 'is_ai': 
             self.labels[key].config(font=('Helvetica', 48))
         self.labels[key].pack(anchor="w", pady=5)
 
@@ -114,10 +117,8 @@ class GameStatusWindow():
             self.variables[key].set('人工')
             self.labels[key].config(fg='black')
 
-        '''
         key = 'empty'
         self.variables[key].set('')
-        '''
 
         key = 'action_name'
         self.variables[key].set('%s' % (self.game_status.action_name))
@@ -136,6 +137,9 @@ class GameStatusWindow():
         self.labels[key].config(fg='black')
         if self.game_status.is_boss_hp_down: 
             self.labels[key].config(fg='red')
+
+        key = 'player_posture'
+        self.variables[key].set('%s: %.2f' % (key, self.game_status.player_posture))
 
         key = 'episode'
         self.variables[key].set('[%s] %s: %s-%s' % (self.game_status.mode, 

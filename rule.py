@@ -7,7 +7,7 @@ class Rule():
 
     def apply(self, state, env): 
         '''
-        apply rule, get action id(not game action id), which is always 0.
+        apply rule, get action id(not game action id), which is always 0(action space is 1).
         this method might be called multi times.
         '''
         # predefined state

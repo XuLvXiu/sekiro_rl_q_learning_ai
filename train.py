@@ -95,6 +95,7 @@ class Trainer:
             obj_information = self.load_checkpoint()
             self.next_episode = obj_information['episode']
 
+        # create game status window
         self.env.create_game_status_window()
 
 
@@ -134,9 +135,8 @@ class Trainer:
             log.info('select_action_using_Q: state[%s] found, using epsilon-greedy' % (str(self.Q.convert_state_to_key(state))))
             Q_s = self.Q.get(state)
             probs = self.get_probs(Q_s, epsilon, action_space)
-            log.info('Q_s: %s' % (Q_s))
-            log.info('probs: %s' % (probs))
             action_id = np.random.choice(action_space, p=probs)
+            log.info('Q_s: %s, probs: %s, action_id: %s' % (Q_s, probs, action_id))
             '''
             # only train some states
             ########################################
@@ -145,7 +145,6 @@ class Trainer:
             ########################################
             '''
             return action_id
-
 
         # if Q does not have state, use random
         log.info('select_action_using_Q: state[%s] not found, using random' % (str(self.Q.convert_state_to_key(state))))
@@ -182,10 +181,6 @@ class Trainer:
 
         step_i = 0
 
-        # select action(A) by state(S) using Q
-        action_id = self.select_action(state, epsilon)
-        next_action_id = None
-
         while True: 
             # log.info('generate_episode main loop running')
             if not g_episode_is_running: 
@@ -194,20 +189,21 @@ class Trainer:
                 self.env.update_game_status_window()
                 time.sleep(1.0)
 
+                # init S
                 env.reset()
                 state = env.get_state()
 
                 step_i = 0
-
-                # select action(A) by state(S) using Q
-                action_id = self.select_action(state, epsilon)
-                next_action_id = None
                 continue
+
 
             self.env.game_status.is_ai = True
 
             t1 = time.time()
             log.info('generate_episode step_i: %s,' % (step_i))
+
+            # select action(A) by state(S) using Q
+            action_id = self.select_action(state, epsilon)
 
             self.env.game_status.step_i     = step_i
             self.env.game_status.error      = ''
@@ -220,18 +216,11 @@ class Trainer:
             log.info('convert rl action_space_key[%s] action_id[%s] to game action id[%s]' % (state.action_space_key, action_id, game_action_id))
             next_state, reward, is_done = env.step(game_action_id)
 
-            # get next action(A') by next_state(S') using Q
-            next_action_id = self.select_action(next_state, epsilon)
-
-            # sarsa = (S, A, R, S', A')
-            sarsa = (state, action_id, reward, next_state, next_action_id)
-            self.update_Q(sarsa, is_done)
+            self.update_Q((state, action_id, reward, next_state), is_done)
 
             # prepare for next step
             # S = S'
-            # A = A'
             state = next_state
-            action_id = next_action_id
 
             t2 = time.time()
             log.info('generate_episode main loop end one step, time: %.2f s' % (t2-t1))
@@ -264,24 +253,25 @@ class Trainer:
         return policy_s
 
 
-    def update_Q(self, sarsa, is_done): 
+    def update_Q(self, data, is_done): 
         '''
-        update Q using sarsa
+        update Q 
         '''
-        (state, action_id, reward, next_state, next_action_id) = sarsa
+        (state, action_id, reward, next_state) = data
 
         Q_s = self.Q.get(state).copy()
         Q_s_next = self.Q.get(next_state).copy()
+        max_value_in_Q_s_next = Q_s_next.max()
 
         Q_s_a = Q_s[action_id]
-        Q_s_a_next = Q_s_next[next_action_id]
 
-        # if S t+1 is the end of the episode, then Q(S t+1, A t+1) = 0
+        # if S t+1 is the end of the episode, then Q(S t+1, a) = 0
         if is_done: 
-            Q_s_a_next = 0
+            max_value_in_Q_s_next = 0
 
-        # Q(S, A) = Q(S, A) + alpha * (R + gamma * Q(S', A') - Q(S, A))
-        new_value = Q_s_a + self.ALPHA * (reward + self.GAMMA * Q_s_a_next - Q_s_a)
+        # Q-learning (Watkins，1989)
+        # Q(S, A) = Q(S, A) + alpha * (R + gamma * MAXa(Q(S', a)) - Q(S, A))
+        new_value = Q_s_a + self.ALPHA * (reward + self.GAMMA * max_value_in_Q_s_next - Q_s_a)
         self.Q.set(state, action_id, new_value)
 
         # for debug
@@ -292,10 +282,10 @@ class Trainer:
 
         log.debug('''update_Q: 
                 old_Q_s[%s] old_N_s[%s], Q_s_next[%s],
-                state[%s] action[%s] reward[%s] next_state[%s] next_action[%s] next_Q_s_a[%s] 
+                state[%s] action[%s] reward[%s] next_state[%s] max_value_in_Q_s_next[%s] 
                 new_Q_s[%s] new_N_s[%s]''' % (Q_s, N_s, Q_s_next,
             str(self.Q.convert_state_to_key(state)), action_id, reward,
-            str(self.Q.convert_state_to_key(next_state)), next_action_id, Q_s_a_next,
+            str(self.Q.convert_state_to_key(next_state)), max_value_in_Q_s_next,
             self.Q.get(state), self.N.get(state)))
 
 

@@ -329,7 +329,7 @@ class Env(object):
                 self.player_life -= 1
                 return True
 
-            if state.boss_hp < 60: 
+            if state.boss_hp < 1: 
                 self.is_boss_dead = True
                 return True
 
