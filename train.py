@@ -174,6 +174,7 @@ class Trainer:
         and update Q after each step
         '''
         env = self.env
+        self.env.game_status.update_by_Q(self.Q, self.N)
 
         # init S
         env.reset()
@@ -186,6 +187,7 @@ class Trainer:
             if not g_episode_is_running: 
                 print('if you lock the boss already, press ] to begin the episode')
                 self.env.game_status.is_ai = False
+                self.env.game_status.update_by_Q(self.Q, self.N)
                 self.env.update_game_status_window()
                 time.sleep(1.0)
 
@@ -217,6 +219,8 @@ class Trainer:
             next_state, reward, is_done = env.step(game_action_id)
 
             self.update_Q((state, action_id, reward, next_state), is_done)
+
+            self.env.game_status.update_by_Q(self.Q, self.N)
 
             # prepare for next step
             # S = S'
@@ -276,6 +280,7 @@ class Trainer:
 
         # for debug
         N_s = self.N.get(state).copy()
+        N_s_next = self.N.get(next_state).copy()
         old_cnt = N_s[action_id]
         new_cnt = old_cnt + 1
         self.N.set(state, action_id, new_cnt)

@@ -2,6 +2,7 @@
 
 import tkinter as tk
 import time
+from q_status_window import QStatus, QStatusWindow
 
 class GameStatus(): 
     '''
@@ -24,6 +25,7 @@ class GameStatus():
         self.is_player_hp_down  = False
         self.is_boss_hp_down    = False
         self.player_posture     = 0
+        self.q_status           = QStatus()
 
 
     def update_by_state(self, state): 
@@ -35,6 +37,13 @@ class GameStatus():
         self.is_player_hp_down      = state.is_player_hp_down
         self.is_boss_hp_down        = state.is_boss_hp_down
         self.player_posture         = state.player_posture
+
+
+    def update_by_Q(self, Q, N): 
+        '''
+        use q status to update local variables
+        '''
+        self.q_status.update(Q.copy(), N.copy())
 
 
 class GameStatusWindow(): 
@@ -90,6 +99,11 @@ class GameStatusWindow():
 
         # data source
         self.game_status = game_status
+
+        # create q status window
+        self.q_status_window_root = tk.Toplevel(self.root)
+        self.q_status_window_root.title("Q & N")
+        self.q_status_window = QStatusWindow(self.game_status.q_status, self.q_status_window_root)
 
 
     def add_label(self, key, frame): 
@@ -156,6 +170,7 @@ class GameStatusWindow():
         # refresh UI
         self.root.update_idletasks()
         self.root.update()
+        self.q_status_window.update()
 
 
 if __name__ == '__main__': 

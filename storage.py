@@ -9,9 +9,10 @@ Q = {
 }
 the length of the array is action_space(may be different for each key).
 '''
-from collections import defaultdict
 import json
 import numpy as np
+from log import log
+import copy
 
 class Storage: 
     '''
@@ -51,6 +52,7 @@ class Storage:
         key = self.convert_state_to_key(state)
         if key not in self.obj: 
             d2_length = self.obj_action_space[state.action_space_key]
+            # log.info('=========key: %s, d2_length: %d, obj_action_space: %s, action_space_key:%s' % (key, d2_length, self.obj_action_space, state.action_space_key))
             self.obj[key] = np.zeros(d2_length)
 
         return self.obj[key]
@@ -92,4 +94,13 @@ class Storage:
 
         return str_summary 
     
+        
+    def copy(self): 
+        '''
+        return a copy of the class object.
+        '''
+        new_storage_object = self.__class__(self.obj_action_space)
+        new_storage_object.obj = copy.deepcopy(self.obj)
+        return new_storage_object
+
 
