@@ -433,7 +433,7 @@ class Env(object):
             state.is_player_posture_crash = True
 
         # check player posture
-        if player_posture >= 25 and player_posture <= 75: 
+        if player_posture >= 20 and player_posture <= 75: 
             if player_posture > self.previous_player_posture: 
                 # posture increase to a new high value
                 self.player_posture_high                = player_posture
@@ -441,7 +441,7 @@ class Env(object):
 
         if not state.is_player_posture_crash: 
             # posture not crash
-            if player_posture < self.player_posture_high * 0.75 and self.is_player_posture_high_happened: 
+            if player_posture < self.player_posture_high * 0.85 and self.is_player_posture_high_happened: 
                 # posture decrease to a reasonable value.
                 # delay it until after state saved.
                 # self.is_player_posture_high_happened    = False
@@ -463,9 +463,13 @@ class Env(object):
         # save it to state history manager.
         self.state_manager.save(state)
 
-        # try to reset happen status.
-        # if POSTURE_DOWN_STATE_ID not happen, no need to reset it.
-        if state.state_id == self.state_manager.POSTURE_DOWN_STATE_ID: 
+        # after some states, calm down.
+        if state.state_id in [self.state_manager.TUCI_STATE_ID,
+                self.state_manager.QINNA_STATE_ID,
+                self.state_manager.FUZHOU_STATE_ID,
+                self.state_manager.PLAYER_HP_DOWN_STATE_ID,
+                self.state_manager.HULU_STATE_ID,
+                self.state_manager.POSTURE_DOWN_STATE_ID]: 
             self.is_player_posture_high_happened = False
 
         # never modify the state from now on.
@@ -477,6 +481,7 @@ class Env(object):
 
         # update game status
         self.game_status.update_by_state(state)
+        self.game_status.is_player_posture_high_happened = self.is_player_posture_high_happened
         self.update_game_status_window()
 
         return state

@@ -27,6 +27,8 @@ class GameStatus():
         self.player_posture     = 0
         self.q_status           = QStatus()
 
+        self.is_player_posture_high_happened = False
+
 
     def update_by_state(self, state): 
         '''
@@ -153,6 +155,10 @@ class GameStatusWindow():
             self.labels[key].config(fg='red')
 
         key = 'player_posture'
+        self.labels[key].config(fg='black')
+        if self.game_status.is_player_posture_high_happened: 
+            self.labels[key].config(fg='blue')
+
         self.variables[key].set('%s: %.2f' % (key, self.game_status.player_posture))
 
         key = 'episode'
