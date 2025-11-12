@@ -433,7 +433,7 @@ class Env(object):
             state.is_player_posture_crash = True
 
         # check player posture
-        if player_posture >= 20 and player_posture <= 75: 
+        if player_posture >= 0 and player_posture <= 75: 
             if player_posture > self.previous_player_posture: 
                 # posture increase to a new high value
                 self.player_posture_high                = player_posture
@@ -441,8 +441,14 @@ class Env(object):
 
         if not state.is_player_posture_crash: 
             # posture not crash
-            if player_posture < self.player_posture_high * 0.85 and self.is_player_posture_high_happened: 
+            if player_posture < self.player_posture_high * 0.95 and self.is_player_posture_high_happened: 
                 # posture decrease to a reasonable value.
+                # delay it until after state saved.
+                # self.is_player_posture_high_happened    = False
+                state.is_player_posture_down_ok         = True
+
+            if player_posture < 0.5: 
+                # posture is close to 0
                 # delay it until after state saved.
                 # self.is_player_posture_high_happened    = False
                 state.is_player_posture_down_ok         = True

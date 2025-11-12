@@ -97,6 +97,7 @@ class Trainer:
 
         # create game status window
         self.env.create_game_status_window()
+        self.env.game_status.update_by_Q(self.Q, self.N)
 
 
     def train(self): 

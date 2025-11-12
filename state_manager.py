@@ -5,6 +5,9 @@ state and manager
 
 from log import log
 from rule import Rule
+import cv2
+from skimage.metrics import structural_similarity
+import time
 
 class State(): 
     '''
@@ -139,6 +142,10 @@ class StateManager():
 
         self.rule = Rule()
 
+        # images similarity
+        self.orb    = cv2.ORB_create()
+        self.bf     = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+
 
     def save(self, state): 
         '''
@@ -183,6 +190,8 @@ class StateManager():
         '''
         generate state id 
         '''
+        last_state = self.get_last_state()
+
         # check if boss is stunned, and player hp less than threshold, this is a extra state to take hulu.
         if state.is_boss_hp_down and state.player_hp < self.HULU_THRESHOLD: 
             state_id = self.HULU_STATE_ID
@@ -197,11 +206,13 @@ class StateManager():
 
         # if posture down to a reasonable value
         if state.is_player_posture_down_ok: 
-            if state.class_id == state.NORMAL_CLASS_ID: 
-                state_id = self.POSTURE_DOWN_STATE_ID
-                log.debug('extra state posture down, state_id:%s' % (state_id))
-                return state_id
+            if state.class_id in [state.NORMAL_CLASS_ID]: 
+                sim = self.image_similarity(last_state.image, state.image)
+                log.debug('extra state posture down, check sim[%.5f]' % (sim))
 
+                if sim > 0.9612 and sim < 0.99: 
+                    state_id = self.POSTURE_DOWN_STATE_ID
+                    return state_id
 
         # default case, use the class id derived from the classification model.
         # some classes need to check signal strength
@@ -269,5 +280,36 @@ class StateManager():
         get the last state from history array
         '''
         return self.arr_state[-1]
+
+
+    def image_similarity(self, img_1, img_2): 
+        '''
+        calculate images similarity
+        '''
+        img_1 = img_1[100:, 50:-50]
+        img_2 = img_2[100:, 50:-50]
+
+        gray_1 = cv2.cvtColor(img_1, cv2.COLOR_BGR2GRAY)
+        gray_2 = cv2.cvtColor(img_2, cv2.COLOR_BGR2GRAY)
+
+        kp_1, des_1 = self.orb.detectAndCompute(gray_1, None)
+        kp_2, des_2 = self.orb.detectAndCompute(gray_2, None)
+
+        if des_1 is None or des_2 is None: 
+            sim = 0
+            return sim
+
+        matches = self.bf.match(des_1, des_2)
+        similar_regions = [i for i in matches if i.distance < 70]
+        sim = len(similar_regions) / len(matches)
+
+        '''
+        ts = time.time()
+        cv2.imwrite('./images/sim_%s_%.4f_color_1.png' % (ts, sim), img_1, [cv2.IMWRITE_PNG_COMPRESSION, 0])
+        cv2.imwrite('./images/sim_%s_%.4f_color_2.png' % (ts, sim), img_2, [cv2.IMWRITE_PNG_COMPRESSION, 0])
+        '''
+
+        return sim
+
 
 
