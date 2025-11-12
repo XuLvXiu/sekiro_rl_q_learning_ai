@@ -41,12 +41,12 @@ class Trainer:
                 self.env.ATTACK_ACTION_ID, 
                 self.env.DOUBLE_ATTACK_ACTION_ID, 
                 self.env.TRIPLE_ATTACK_ACTION_ID,
-                self.env.QUADRUPLE_ATTACK_ACTION_ID,
+                # self.env.QUADRUPLE_ATTACK_ACTION_ID,
             ],
             'shipo_attack': [
                 self.env.SHIPO_ATTACK_ACTION_ID,
                 self.env.SHIPO_DOUBLE_ATTACK_ACTION_ID,
-                self.env.SHIPO_TRIPLE_ATTACK_ACTION_ID,
+                # self.env.SHIPO_TRIPLE_ATTACK_ACTION_ID,
             ],
             'parry': [
                 self.env.PARRY_ACTION_ID,

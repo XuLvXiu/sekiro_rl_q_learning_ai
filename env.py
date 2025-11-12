@@ -96,7 +96,6 @@ class Env(object):
 
         # player posture
         self.previous_player_posture            = 0
-        self.is_player_posture_high_happened    = False
         self.player_posture_high                = 0
 
         # the classification model v2
@@ -120,7 +119,45 @@ class Env(object):
         self.game_status = GameStatus()
         self.game_status_window = None
 
-    
+        # boss angry point, very naive
+        self.boss_angry_point = 0
+
+
+    def change_boss_angry_point(self, action, **kwargs): 
+        '''
+        change boss angry point according the action
+        '''
+        if action not in ['PLAYER_ATTACK', 'PLAYER_ATTACK_DAMAGE', 
+                'TAKE_HULU', 'TIME_PASS', 'BOSS_ATTACK', 'BOSS_ATTACK_DAMAGE']: 
+            print('action not found')
+            sys.exit(-1)
+
+        if action == 'PLAYER_ATTACK': 
+            self.boss_angry_point += 20
+
+        if action == 'PLAYER_ATTACK_DAMAGE': 
+            attack_count = kwargs['attack_count']
+            self.boss_angry_point += attack_count * 5
+
+        if action == 'TAKE_HULU': 
+            self.boss_angry_point += 30
+
+        if action == 'TIME_PASS': 
+            self.boss_angry_point -= 0.3
+
+        if action == 'BOSS_ATTACK': 
+            self.boss_angry_point -= 5
+
+        if action == 'BOSS_ATTACK_DAMAGE': 
+            self.boss_angry_point -= 6
+
+        if self.boss_angry_point > 50: 
+            self.boss_angry_point = 50 
+
+        if self.boss_angry_point < 0: 
+            self.boss_angry_point = 0
+
+
     def create_game_status_window(self): 
         '''
         create a tiny game status window if you like.
@@ -306,6 +343,9 @@ class Env(object):
         if self.is_attack(action_id): 
             # should check boss hp down or attack was blocked, to avoid sleep too long.
 
+            # we attack the boss, he will be very angry.
+            self.change_boss_angry_point('PLAYER_ATTACK')
+
             # since it is an attack, we will mark it.
             # it will be used by the following parry states.
             last_state = self.state_manager.get_last_state()
@@ -376,7 +416,6 @@ class Env(object):
         self.player_life        = 2
 
         self.previous_player_posture            = 0
-        self.is_player_posture_high_happened    = False
         self.player_posture_high                = 0
 
         self.executor.interrupt_action()
@@ -429,32 +468,36 @@ class Env(object):
         if boss_hp_down > THRESHOLD: 
             state.is_boss_hp_down = True
 
+        # check player posture crash
         if self.previous_player_posture > 50 and state.player_posture < 1: 
             state.is_player_posture_crash = True
 
-        # check player posture
-        if player_posture >= 0 and player_posture <= 75: 
-            if player_posture > self.previous_player_posture: 
-                # posture increase to a new high value
-                self.player_posture_high                = player_posture
-                self.is_player_posture_high_happened    = True
+        # if boss attacks player, its angry point should decrease a little.
+        if player_posture > self.previous_player_posture: 
+            self.change_boss_angry_point('BOSS_ATTACK')
 
-        if not state.is_player_posture_crash: 
-            # posture not crash
-            if player_posture < self.player_posture_high * 0.95 and self.is_player_posture_high_happened: 
-                # posture decrease to a reasonable value.
-                # delay it until after state saved.
-                # self.is_player_posture_high_happened    = False
-                state.is_player_posture_down_ok         = True
+        '''
+        check posture down
+        '''
+        if player_posture < self.previous_player_posture: 
+            # posture decrease to a reasonable value.
+            state.is_player_posture_down_ok         = True
 
-            if player_posture < 0.5: 
-                # posture is close to 0
-                # delay it until after state saved.
-                # self.is_player_posture_high_happened    = False
-                state.is_player_posture_down_ok         = True
-        else: 
-            # posture crash
-            self.is_player_posture_high_happened   = False
+        if player_posture < 0.5: 
+            # posture is close to 0
+            state.is_player_posture_down_ok         = True
+
+        # if boss is too angry, cancel the attack
+        if self.boss_angry_point > 25: 
+            state.is_player_posture_down_ok = False
+
+        # if we are going to die, cancel the attack
+        if player_hp < self.state_manager.HULU_THRESHOLD: 
+            state.is_player_posture_down_ok = False
+
+        # if our posture crashed, cancel the attack
+        if state.is_player_posture_crash: 
+            state.is_player_posture_down_ok = False
 
         # predict class id
         inputs = self.transform_state(state)
@@ -469,14 +512,9 @@ class Env(object):
         # save it to state history manager.
         self.state_manager.save(state)
 
-        # after some states, calm down.
-        if state.state_id in [self.state_manager.TUCI_STATE_ID,
-                self.state_manager.QINNA_STATE_ID,
-                self.state_manager.FUZHOU_STATE_ID,
-                self.state_manager.PLAYER_HP_DOWN_STATE_ID,
-                self.state_manager.HULU_STATE_ID,
-                self.state_manager.POSTURE_DOWN_STATE_ID]: 
-            self.is_player_posture_high_happened = False
+        # if we take hulu, boss will be a little angry.
+        if state.state_id == self.state_manager.HULU_STATE_ID: 
+            self.change_boss_angry_point('TAKE_HULU')
 
         # never modify the state from now on.
 
@@ -487,7 +525,7 @@ class Env(object):
 
         # update game status
         self.game_status.update_by_state(state)
-        self.game_status.is_player_posture_high_happened = self.is_player_posture_high_happened
+        self.game_status.boss_angry_point = self.boss_angry_point
         self.update_game_status_window()
 
         return state
@@ -509,6 +547,9 @@ class Env(object):
 
         is_done = self.check_done(new_state)
         (reward, log_reward) = self.cal_reward(new_state, action_id)
+
+        # boss angry will descrease as time passes.
+        self.change_boss_angry_point('TIME_PASS')
 
         log.debug('new step end, is_done[%s], is_dead[%s][%s], player_life[%s], reward[%s %s]' % (is_done, self.is_player_dead, self.is_boss_dead,
             self.player_life,
@@ -541,11 +582,17 @@ class Env(object):
 
             log_reward += 'player_hp-,'
 
+            # if boss attacks player, its angry point should decrease a little.
+            self.change_boss_angry_point('BOSS_ATTACK_DAMAGE')
+
         if new_state.is_boss_hp_down: 
             reward += 30
             attack_count = int((self.previous_boss_hp - boss_hp) / 4)
             reward += (attack_count - 1) * 10
             log_reward += 'boss_hp-,attack_count:%s,' % (attack_count)
+
+            # if we attacks boss multi times, he will be more angry.
+            self.change_boss_angry_point('PLAYER_ATTACK_DAMAGE', attack_count=attack_count)
 
             if not self.is_attack(action_id): 
                 # sometimes, the player is stunned when it pressed the left mouse button, 

@@ -27,7 +27,7 @@ class GameStatus():
         self.player_posture     = 0
         self.q_status           = QStatus()
 
-        self.is_player_posture_high_happened = False
+        self.boss_angry_point = 0
 
 
     def update_by_state(self, state): 
@@ -94,7 +94,8 @@ class GameStatusWindow():
         self.add_label('boss_hp', self.right_frame)
 
         self.add_label('player_posture', self.left_frame)
-        self.add_label('empty', self.right_frame)
+        self.add_label('boss_angry_point', self.right_frame)
+        # self.add_label('empty', self.right_frame)
 
         self.add_label('episode', self.left_frame)
         self.add_label('error', self.right_frame)
@@ -134,7 +135,8 @@ class GameStatusWindow():
             self.labels[key].config(fg='black')
 
         key = 'empty'
-        self.variables[key].set('')
+        if key in self.variables: 
+            self.variables[key].set('')
 
         key = 'action_name'
         self.variables[key].set('%s' % (self.game_status.action_name))
@@ -156,10 +158,14 @@ class GameStatusWindow():
 
         key = 'player_posture'
         self.labels[key].config(fg='black')
-        if self.game_status.is_player_posture_high_happened: 
-            self.labels[key].config(fg='blue')
-
         self.variables[key].set('%s: %.2f' % (key, self.game_status.player_posture))
+
+        key = 'boss_angry_point'
+        self.labels[key].config(fg='black')
+        if self.game_status.boss_angry_point > 25: 
+            self.labels[key].config(fg='red')
+
+        self.variables[key].set('boss_ap: %.2f' % (self.game_status.boss_angry_point))
 
         key = 'episode'
         self.variables[key].set('[%s] %s: %s-%s' % (self.game_status.mode, 
