@@ -4,6 +4,7 @@ import tkinter as tk
 import time
 from state_manager import State
 from log import log
+import numpy as np
 
 class QStatus(): 
     '''
@@ -112,11 +113,13 @@ class QStatusWindow():
                 continue
 
             arr_value = []
-            for value in self.q_status.Q.get(state): 
+            arr_q_s = self.q_status.Q.get(state)
+            for value in arr_q_s: 
                 arr_value.append('%.2f' % (value))
             q_line = ', '.join(arr_value)
             n_line = '%s' % (self.q_status.N.get(state))
             line = q_line + ', N:' + n_line
+            line = '[%d] ' % (np.argmax(arr_q_s)) + line
             self.variables[key].set('%s' % line)
 
         # refresh UI
