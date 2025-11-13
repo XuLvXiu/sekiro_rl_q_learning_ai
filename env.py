@@ -124,7 +124,7 @@ class Env(object):
         self.game_status_window = None
 
         # boss angry point, very naive
-        self.boss_angry_point = 0
+        self.boss_angry_point = 100
 
 
     def change_boss_angry_point(self, action, **kwargs): 
@@ -147,7 +147,7 @@ class Env(object):
             self.boss_angry_point += 30
 
         if action == 'TIME_PASS': 
-            self.boss_angry_point -= 0.3
+            self.boss_angry_point -= 0.5
 
         if action == 'BOSS_ATTACK': 
             self.boss_angry_point -= 5
@@ -155,8 +155,8 @@ class Env(object):
         if action == 'BOSS_ATTACK_DAMAGE': 
             self.boss_angry_point -= 6
 
-        if self.boss_angry_point > 50: 
-            self.boss_angry_point = 50 
+        if self.boss_angry_point > 60: 
+            self.boss_angry_point = 60 
 
         if self.boss_angry_point < 0: 
             self.boss_angry_point = 0
@@ -421,6 +421,7 @@ class Env(object):
 
         self.previous_player_posture            = 0
         self.player_posture_high                = 0
+        self.boss_angry_point   = 100
 
         self.executor.interrupt_action()
 
@@ -492,7 +493,7 @@ class Env(object):
             state.is_player_posture_down_ok         = True
 
         # if boss is too angry, cancel the attack
-        if self.boss_angry_point > 25: 
+        if self.boss_angry_point > 40: 
             state.is_player_posture_down_ok = False
 
         # if we are going to die, cancel the attack

@@ -162,7 +162,7 @@ class GameStatusWindow():
 
         key = 'boss_angry_point'
         self.labels[key].config(fg='black')
-        if self.game_status.boss_angry_point > 25: 
+        if self.game_status.boss_angry_point > 40: 
             self.labels[key].config(fg='red')
 
         self.variables[key].set('boss_ap: %.2f' % (self.game_status.boss_angry_point))

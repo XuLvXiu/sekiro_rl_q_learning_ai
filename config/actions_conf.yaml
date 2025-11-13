@@ -112,6 +112,7 @@ actions:
     - ['release', 'space']
     - ['delay', 0.2]
     - ['release', 's']
+    - ['delay', 0.2]
 
   STAND_UP: 
     - ['press', 's']
@@ -130,6 +131,7 @@ actions:
     - ['release', 'space']
     - ['delay', 0.2]
     - ['release', 's']
+    - ['delay', 0.2]
 
   DIANBU_PARRY_ATTACK: 
     - *SHIPO
