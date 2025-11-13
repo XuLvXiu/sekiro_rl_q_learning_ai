@@ -15,6 +15,10 @@ class Rule():
         if state.state_id in env.state_manager.arr_parry_after_attack_state_id:  
             return 0
 
+        # state-7: 
+        if state.state_id == env.state_manager.ATTACK_AFTER_DAMAGE_STATE_ID: 
+            return 0
+
         # state-6: 
         if state.state_id == env.state_manager.HULU_STATE_ID: 
             return 0
@@ -32,7 +36,11 @@ class Rule():
         if state.state_id == env.state_manager.BAD_TUCI_STATE_ID: 
             return 0
 
-        # state-1/2/3/10
+        # state-2: 
+        if state.state_id == env.state_manager.QINNA_STATE_ID: 
+            return 0
+
+        # state-1/3/10
         # no rule found, will use Q
         return None
 
@@ -57,7 +65,8 @@ class Rule():
 
         # state 1/2/3 is attack
         # state 5/6 is neither parry nor attack.
-        # state 10 is special, not parry.
+        # state 7 is attack.
+        # state 10 is attack.
         return False
 
 
@@ -69,13 +78,14 @@ class Rule():
             # 0-4
             state_manager.NORMAL_STATE_ID: 'parry',
             state_manager.TUCI_STATE_ID: 'shipo_attack',
-            state_manager.QINNA_STATE_ID: 'simple_attack',
-            state_manager.FUZHOU_STATE_ID: 'simple_attack',
+            state_manager.QINNA_STATE_ID: 'qinna_attack',
+            state_manager.FUZHOU_STATE_ID: 'fuzhou_attack',
             state_manager.BAD_TUCI_STATE_ID: 'parry',
 
-            # 5-6
+            # 5-7
             state_manager.PLAYER_HP_DOWN_STATE_ID: 'player_hp_down',
             state_manager.HULU_STATE_ID: 'hulu',
+            state_manager.ATTACK_AFTER_DAMAGE_STATE_ID: 'attack_after_damage',
 
             # 10
             state_manager.POSTURE_DOWN_STATE_ID: 'player_posture_down',

@@ -41,12 +41,17 @@ class Trainer:
                 self.env.ATTACK_ACTION_ID, 
                 self.env.DOUBLE_ATTACK_ACTION_ID, 
                 self.env.TRIPLE_ATTACK_ACTION_ID,
-                # self.env.QUADRUPLE_ATTACK_ACTION_ID,
             ],
             'shipo_attack': [
                 self.env.SHIPO_ATTACK_ACTION_ID,
                 self.env.SHIPO_DOUBLE_ATTACK_ACTION_ID,
-                # self.env.SHIPO_TRIPLE_ATTACK_ACTION_ID,
+            ],
+            'qinna_attack': [
+                self.env.DOUBLE_ATTACK_ACTION_ID, 
+            ],
+            'fuzhou_attack': [
+                self.env.ATTACK_ACTION_ID, 
+                self.env.DOUBLE_ATTACK_ACTION_ID, 
             ],
             'parry': [
                 self.env.PARRY_ACTION_ID,
@@ -58,12 +63,14 @@ class Trainer:
                 self.env.TAKE_HULU_ACTION_ID,
             ],
             'player_posture_down': [
-                self.env.PARRY_ACTION_ID,
                 self.env.ATTACK_ACTION_ID, 
                 self.env.DOUBLE_ATTACK_ACTION_ID, 
             ],
             'parry_after_attack': [
                 self.env.PARRY_ACTION_ID,
+            ],
+            'attack_after_damage': [
+                self.env.DOUBLE_ATTACK_ACTION_ID,
             ],
             'default': [
                 self.env.PARRY_ACTION_ID,

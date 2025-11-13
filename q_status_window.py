@@ -61,7 +61,7 @@ class QStatusWindow():
         self.add_label('title', self.top_frame)
 
         for i in range(0, 20): 
-            if i in [7, 8, 9]: 
+            if i in [8, 9]: 
                 continue
 
             key = 'state_%s' % (i)

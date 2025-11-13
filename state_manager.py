@@ -115,6 +115,9 @@ class StateManager():
         self.HULU_STATE_ID              = 6
 
         # more extra states
+        self.ATTACK_AFTER_DAMAGE_STATE_ID   = 7
+
+        # more extra states
         self.POSTURE_DOWN_STATE_ID      = 10
 
         # more extra states
@@ -203,6 +206,22 @@ class StateManager():
             state_id = self.PLAYER_HP_DOWN_STATE_ID
             log.debug('extra state player_hp_down %s' % (state_id))
             return state_id
+
+        # if player hurt the boss, this is a extra state to attack
+        if last_state.state_id in [
+                self.TUCI_STATE_ID,
+                self.QINNA_STATE_ID,
+                self.FUZHOU_STATE_ID,
+                ] and state.is_boss_hp_down: 
+            state_id = self.ATTACK_AFTER_DAMAGE_STATE_ID
+            log.debug('extra state attack_after_damage %s' % (state_id))
+            return state_id
+
+        if last_state.state_id == self.ATTACK_AFTER_DAMAGE_STATE_ID: 
+            if state.class_id == state.BAD_TUCI_CLASS_ID: 
+                state_id = self.TUCI_STATE_ID
+                log.debug('extra state tuci after attack after attack: %s' % (state_id))
+                return state_id
 
         # if posture down to a reasonable value
         if state.is_player_posture_down_ok: 
@@ -302,13 +321,6 @@ class StateManager():
         matches = self.bf.match(des_1, des_2)
         similar_regions = [i for i in matches if i.distance < 70]
         sim = len(similar_regions) / len(matches)
-
-        '''
-        ts = time.time()
-        cv2.imwrite('./images/sim_%s_%.4f_color_1.png' % (ts, sim), img_1, [cv2.IMWRITE_PNG_COMPRESSION, 0])
-        cv2.imwrite('./images/sim_%s_%.4f_color_2.png' % (ts, sim), img_2, [cv2.IMWRITE_PNG_COMPRESSION, 0])
-        '''
-
         return sim
 
 

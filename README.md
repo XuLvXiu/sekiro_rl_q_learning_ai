@@ -75,6 +75,8 @@ https://www.bilibili.com/video//
 state-5 指的是 player 受到了伤害，处理方法为向后垫步，如果是躺在地上则会快速起身。
 state-6 指的是 boss 受到了伤害且 player hp < 60，此时应该去喝血瓶。
 
+state-7 指的是 player 攻击对 boss 造成了伤害，此时可以再次追击
+
 state-11-19 是指攻击之后处于防御状态的几个step的分段，主要目的是从state-0中分离出来，得分会更精确。
 
 这几个 states 不需要探索 action，直接使用预定义的处理规则即可。
