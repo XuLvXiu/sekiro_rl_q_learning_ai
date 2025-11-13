@@ -59,6 +59,9 @@ class Trainer:
             'player_hp_down': [
                 self.env.STAND_UP_ACTION_ID,
             ],
+            'player_posture_crash': [
+                self.env.POSTURE_CRASH_ACTION_ID,
+            ],
             'hulu': [
                 self.env.TAKE_HULU_ACTION_ID,
             ],

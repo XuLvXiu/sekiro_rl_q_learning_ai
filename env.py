@@ -60,6 +60,9 @@ class Env(object):
             'SHIPO_DOUBLE_ATTACK',
             # 11
             'SHIPO_TRIPLE_ATTACK',
+
+            # 12
+            'POSTURE_CRASH',
             'JUMP'
         ]
 
@@ -78,6 +81,7 @@ class Env(object):
         self.SHIPO_ATTACK_ACTION_ID         = 9
         self.SHIPO_DOUBLE_ATTACK_ACTION_ID  = 10
         self.SHIPO_TRIPLE_ATTACK_ACTION_ID  = 11
+        self.POSTURE_CRASH_ACTION_ID        = 12
 
         # state manager
         self.state_manager = StateManager()

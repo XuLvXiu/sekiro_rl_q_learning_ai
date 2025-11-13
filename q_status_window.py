@@ -46,13 +46,13 @@ class QStatusWindow():
 
         # frames
         self.top_frame = tk.Frame(self.root)
-        self.top_frame.pack(side=tk.TOP, padx=10, pady=10)
+        self.top_frame.pack(side=tk.TOP, padx=10, pady=0)
 
         self.left_frame = tk.Frame(self.root)
-        self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
+        self.left_frame.pack(side=tk.LEFT, padx=10, pady=5)
 
         self.right_frame = tk.Frame(self.root)
-        self.right_frame.pack(side=tk.RIGHT, padx=10, pady=10)
+        self.right_frame.pack(side=tk.RIGHT, padx=10, pady=5)
 
         # variables and labels
         self.variables  = {}
@@ -61,7 +61,7 @@ class QStatusWindow():
         self.add_label('title', self.top_frame)
 
         for i in range(0, 20): 
-            if i in [8, 9]: 
+            if i in [9]: 
                 continue
 
             key = 'state_%s' % (i)
@@ -82,7 +82,7 @@ class QStatusWindow():
         self.labels[key] = tk.Label(frame, textvariable=self.variables[key])
         self.labels[key].config(font=('Consolas', 12))
         if key == 'title': 
-            self.labels[key].config(font=('Helvetica', 32))
+            self.labels[key].config(font=('Helvetica', 16))
         self.labels[key].pack(anchor="w", pady=5)
 
 
@@ -95,12 +95,49 @@ class QStatusWindow():
         self.variables[key].set('%s' % ('Q & N'))
         self.labels[key].config(fg='blue')
 
+        arr_state_name = [
+            # 0-4
+            'default',
+            '突刺',
+            '擒拿',
+            '浮舟',
+            '突刺*',
+
+            # 5-8
+            '受伤',
+            'hulu',
+            '追击',
+            'crash',
+
+            # 9 not exist
+            '',
+
+            # 10
+            '主攻',
+
+            # 11-19
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+        ]
+
         for i in range(0, 20): 
             key = 'state_%s' % (i)
             if key not in self.variables: 
                 continue
 
-            self.variables[key].set('%s' % key)
+            name = arr_state_name[i]
+            self.variables[key].set('%s %s' % (i, name))
 
             state = State()
             state.final_state_id = i

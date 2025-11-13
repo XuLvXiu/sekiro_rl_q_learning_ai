@@ -15,6 +15,10 @@ class Rule():
         if state.state_id in env.state_manager.arr_parry_after_attack_state_id:  
             return 0
 
+        # state-8:
+        if state.state_id == env.state_manager.POSTURE_CRASH_STATE_ID: 
+            return 0
+
         # state-7: 
         if state.state_id == env.state_manager.ATTACK_AFTER_DAMAGE_STATE_ID: 
             return 0
@@ -64,7 +68,7 @@ class Rule():
                 return True
 
         # state 1/2/3 is attack
-        # state 5/6 is neither parry nor attack.
+        # state 5/6/8 is neither parry nor attack.
         # state 7 is attack.
         # state 10 is attack.
         return False
@@ -82,10 +86,11 @@ class Rule():
             state_manager.FUZHOU_STATE_ID: 'fuzhou_attack',
             state_manager.BAD_TUCI_STATE_ID: 'parry',
 
-            # 5-7
+            # 5-8
             state_manager.PLAYER_HP_DOWN_STATE_ID: 'player_hp_down',
             state_manager.HULU_STATE_ID: 'hulu',
             state_manager.ATTACK_AFTER_DAMAGE_STATE_ID: 'attack_after_damage',
+            state_manager.POSTURE_CRASH_STATE_ID : 'player_posture_crash',
 
             # 10
             state_manager.POSTURE_DOWN_STATE_ID: 'player_posture_down',

@@ -94,15 +94,42 @@ actions:
     - *SHIPO
     - *ATTACK
 
+  POSTURE_CRASH: 
+    - ['delay', 0.5]
+    - ['press', 's']
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.2]
+
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.2]
+
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.2]
+    - ['release', 's']
+
   STAND_UP: 
     - ['press', 's']
-    - *SHIPO
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.2]
+
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.2]
+
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.2]
     - ['release', 's']
-    - *PARRY
-    - ['delay', 0.1]
-    - *PARRY
-    - ['delay', 0.1]
-    - *RELEASE_PARRY
 
   DIANBU_PARRY_ATTACK: 
     - *SHIPO

@@ -118,6 +118,9 @@ class StateManager():
         self.ATTACK_AFTER_DAMAGE_STATE_ID   = 7
 
         # more extra states
+        self.POSTURE_CRASH_STATE_ID     = 8
+
+        # more extra states
         self.POSTURE_DOWN_STATE_ID      = 10
 
         # more extra states
@@ -195,10 +198,10 @@ class StateManager():
         '''
         last_state = self.get_last_state()
 
-        # check if boss is stunned, and player hp less than threshold, this is a extra state to take hulu.
-        if state.is_boss_hp_down and state.player_hp < self.HULU_THRESHOLD: 
-            state_id = self.HULU_STATE_ID
-            log.debug('extra state take_hulu %s' % (state_id))
+        # if player posture crash, this is a extra state
+        if state.is_player_posture_crash: 
+            state_id = self.POSTURE_CRASH_STATE_ID
+            log.debug('extra state player_posture_crash %s' % (state_id))
             return state_id
 
         # if player hp is down, this is a extra state
@@ -207,21 +210,43 @@ class StateManager():
             log.debug('extra state player_hp_down %s' % (state_id))
             return state_id
 
+        # check if boss is stunned, and player hp less than threshold, this is a extra state to take hulu.
+        if state.is_boss_hp_down and state.player_hp < self.HULU_THRESHOLD: 
+            state_id = self.HULU_STATE_ID
+            log.debug('extra state take_hulu %s' % (state_id))
+            return state_id
+
         # if player hurt the boss, this is a extra state to attack
         if last_state.state_id in [
                 self.TUCI_STATE_ID,
                 self.QINNA_STATE_ID,
                 self.FUZHOU_STATE_ID,
-                ] and state.is_boss_hp_down: 
-            state_id = self.ATTACK_AFTER_DAMAGE_STATE_ID
-            log.debug('extra state attack_after_damage %s' % (state_id))
-            return state_id
-
-        if last_state.state_id == self.ATTACK_AFTER_DAMAGE_STATE_ID: 
-            if state.class_id == state.BAD_TUCI_CLASS_ID: 
-                state_id = self.TUCI_STATE_ID
-                log.debug('extra state tuci after attack after attack: %s' % (state_id))
+                ]: 
+            if state.is_boss_hp_down: 
+                state_id = self.ATTACK_AFTER_DAMAGE_STATE_ID
+                log.debug('extra state attack_after_damage %s' % (state_id))
                 return state_id
+
+        # player's attack angered the boss, he will do TUCI maybe.
+        '''
+        if self.arr_state[-1].state_id in [self.ATTACK_AFTER_DAMAGE_STATE_ID,
+                ] and self.arr_state[-2].state_id in [
+                    self.QINNA_STATE_ID,
+                ]:
+            class_id = state.class_id
+            if class_id == state.BAD_TUCI_CLASS_ID: 
+                number_of_history_needed = 0
+                signal_strength = 0
+                for i in range(0, number_of_history_needed): 
+                    if state.arr_history_class_id[-1 * (i + 1)] == class_id: 
+                        signal_strength += 1
+
+                log.debug('class_id: %s, signal_strength: %s, number_of_history_needed: %s' % (class_id, signal_strength, number_of_history_needed))
+                if signal_strength >= number_of_history_needed: 
+                    state_id = self.TUCI_STATE_ID
+                    log.debug('extra state tuci after attack after attack: %s' % (state_id))
+                    return state_id
+        '''
 
         # if posture down to a reasonable value
         if state.is_player_posture_down_ok: 
@@ -305,6 +330,10 @@ class StateManager():
         '''
         calculate images similarity
         '''
+        if img_1 is None: 
+            sim = 0
+            return 0
+
         img_1 = img_1[100:, 50:-50]
         img_2 = img_2[100:, 50:-50]
 
