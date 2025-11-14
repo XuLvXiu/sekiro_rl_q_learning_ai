@@ -14,6 +14,8 @@
 
 https://www.bilibili.com/video//
 
+不得不承认，在战斗的后半段 AI 属实是超水平发挥了，平时也打不了这么好。
+
 ## 游戏设置
 
 - steam 开始游戏
