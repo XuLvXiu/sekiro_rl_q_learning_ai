@@ -167,6 +167,16 @@ class ActionExecutor:
 
         self.pressed_buttons.add(button)  # 记录按下的鼠标按钮
 
+
+    def is_button_pressed(self, button): 
+        '''
+        check if button pressed
+        @param button: string, can be left/right/middle
+        '''
+        if button in self.pressed_buttons: 
+            return True
+        return False
+
     def _release_mouse(self, button):
         """释放鼠标按钮并从记录中移除"""
         # log.debug('release mouse: %s' % (button))

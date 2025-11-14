@@ -376,9 +376,10 @@ class Env(object):
         如果现在不要防御，那么也需要判断前一个动作是否为防御，
             如果前一个动作为防御，那么需要释放右键才能进行本次的动作。
         '''
-        if self.is_parry(action_id) and self.is_parry(self.previous_action_id): 
+        if self.is_parry(action_id) and self.executor.is_button_pressed('right'): 
             action_name = 'IDLE'
-        if (not self.is_parry(action_id)) and self.is_parry(self.previous_action_id): 
+
+        if (not self.is_parry(action_id)) and self.executor.is_button_pressed('right'): 
             log.debug('take_action: %s' % ('RELEASE_PARRY'))
             self.executor.take_action('RELEASE_PARRY', action_finished_callback=self.on_action_finished)
 
