@@ -57,9 +57,8 @@ env.create_game_status_window()
 env.eval()
 
 # load Q
-action_space = env.action_space
-Q = Storage(action_space)
-N = Storage(action_space)
+Q = None
+N = None
 CHECKPOINT_FILE = 'checkpoint.pkl'
 JSON_FILE = 'checkpoint.json'
 
@@ -73,6 +72,7 @@ with open(JSON_FILE, 'r', encoding='utf-8') as f:
 
 log.info(obj_information)
 env.game_status.episode = obj_information['episode']
+env.game_status.update_by_Q(Q, N)
 
 '''
 # generate the policy
@@ -84,8 +84,7 @@ for (k, v) in Q.items():
     policy[state] = action_id
 log.info('policy: %s' % (policy))
 '''
-
-
+obj_possible_action_id = env.obj_possible_action_id
 
 env.reset()
 state = env.get_state()
@@ -123,7 +122,7 @@ while True:
     action_id = a_star
 
     # at first, convert rf action_id to game action_id
-    game_action_id = env.arr_possible_action_id[action_id]
+    game_action_id = obj_possible_action_id[state.action_space_key][action_id]
     log.info('convert rl action_id[%s] to game action id[%s]' % (action_id, game_action_id))
 
     # do next step, get next state

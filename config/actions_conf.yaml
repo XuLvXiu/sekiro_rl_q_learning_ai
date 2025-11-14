@@ -96,38 +96,37 @@ actions:
 
   POSTURE_CRASH: 
     - ['delay', 0.5]
+
     - ['press', 's']
-    - ['press', 'space']
     - ['delay', 0.1]
-    - ['release', 'space']
-    - ['delay', 0.2]
 
     - ['press', 'space']
     - ['delay', 0.1]
     - ['release', 'space']
-    - ['delay', 0.2]
+    - ['delay', 0.4]
 
     - ['press', 'space']
     - ['delay', 0.1]
     - ['release', 'space']
-    - ['delay', 0.2]
+    - ['delay', 0.4]
+
     - ['release', 's']
-    - ['delay', 0.1]
 
   STAND_UP: 
     - ['press', 's']
-    - ['press', 'space']
     - ['delay', 0.1]
-    - ['release', 'space']
-    - ['delay', 0.2]
 
     - ['press', 'space']
     - ['delay', 0.1]
     - ['release', 'space']
-    - ['delay', 0.2]
+    - ['delay', 0.4]
+
+    - ['press', 'space']
+    - ['delay', 0.1]
+    - ['release', 'space']
+    - ['delay', 0.4]
 
     - ['release', 's']
-    - ['delay', 0.1]
 
   DIANBU_PARRY_ATTACK: 
     - *SHIPO
@@ -138,20 +137,18 @@ actions:
 
   TAKE_HULU: 
     - ['press', 's']
-    - ['press', 'space']
     - ['delay', 0.1]
-    - ['release', 'space']
-    - ['delay', 0.2]
 
     - ['press', 'space']
     - ['delay', 0.1]
     - ['release', 'space']
-    - ['delay', 0.2]
+    - ['delay', 0.4]
 
     - ['press', 'space']
     - ['delay', 0.1]
     - ['release', 'space']
-    - ['delay', 0.2]
+    - ['delay', 0.4]
+
     - ['release', 's']
 
     - ['press', 'p']

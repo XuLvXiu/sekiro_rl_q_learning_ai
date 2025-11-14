@@ -83,6 +83,53 @@ class Env(object):
         self.SHIPO_TRIPLE_ATTACK_ACTION_ID  = 11
         self.POSTURE_CRASH_ACTION_ID        = 12
 
+        # possible actions to be explored in RF
+        # why we put it here?
+        # it can be used both in train.py and main.py
+        self.obj_possible_action_id = {
+            'simple_attack': [
+                self.ATTACK_ACTION_ID, 
+                self.DOUBLE_ATTACK_ACTION_ID, 
+                self.TRIPLE_ATTACK_ACTION_ID,
+            ],
+            'shipo_attack': [
+                self.SHIPO_ATTACK_ACTION_ID,
+                self.SHIPO_DOUBLE_ATTACK_ACTION_ID,
+            ],
+            'qinna_attack': [
+                self.DOUBLE_ATTACK_ACTION_ID, 
+            ],
+            'fuzhou_attack': [
+                self.ATTACK_ACTION_ID, 
+                self.DOUBLE_ATTACK_ACTION_ID, 
+            ],
+            'parry': [
+                self.PARRY_ACTION_ID,
+            ],
+            'player_hp_down': [
+                self.STAND_UP_ACTION_ID,
+            ],
+            'player_posture_crash': [
+                self.POSTURE_CRASH_ACTION_ID,
+            ],
+            'hulu': [
+                self.TAKE_HULU_ACTION_ID,
+            ],
+            'player_posture_down': [
+                self.ATTACK_ACTION_ID, 
+                self.DOUBLE_ATTACK_ACTION_ID, 
+            ],
+            'parry_after_attack': [
+                self.PARRY_ACTION_ID,
+            ],
+            'attack_after_damage': [
+                self.DOUBLE_ATTACK_ACTION_ID,
+            ],
+            'default': [
+                self.PARRY_ACTION_ID,
+            ],
+        }
+
         # state manager
         self.state_manager = StateManager()
 

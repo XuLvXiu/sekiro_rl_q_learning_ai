@@ -36,49 +36,7 @@ class Trainer:
         self.env.train()
 
         # possible actions to be explored in RF
-        self.obj_possible_action_id = {
-            'simple_attack': [
-                self.env.ATTACK_ACTION_ID, 
-                self.env.DOUBLE_ATTACK_ACTION_ID, 
-                self.env.TRIPLE_ATTACK_ACTION_ID,
-            ],
-            'shipo_attack': [
-                self.env.SHIPO_ATTACK_ACTION_ID,
-                self.env.SHIPO_DOUBLE_ATTACK_ACTION_ID,
-            ],
-            'qinna_attack': [
-                self.env.DOUBLE_ATTACK_ACTION_ID, 
-            ],
-            'fuzhou_attack': [
-                self.env.ATTACK_ACTION_ID, 
-                self.env.DOUBLE_ATTACK_ACTION_ID, 
-            ],
-            'parry': [
-                self.env.PARRY_ACTION_ID,
-            ],
-            'player_hp_down': [
-                self.env.STAND_UP_ACTION_ID,
-            ],
-            'player_posture_crash': [
-                self.env.POSTURE_CRASH_ACTION_ID,
-            ],
-            'hulu': [
-                self.env.TAKE_HULU_ACTION_ID,
-            ],
-            'player_posture_down': [
-                self.env.ATTACK_ACTION_ID, 
-                self.env.DOUBLE_ATTACK_ACTION_ID, 
-            ],
-            'parry_after_attack': [
-                self.env.PARRY_ACTION_ID,
-            ],
-            'attack_after_damage': [
-                self.env.DOUBLE_ATTACK_ACTION_ID,
-            ],
-            'default': [
-                self.env.PARRY_ACTION_ID,
-            ],
-        }
+        self.obj_possible_action_id = self.env.obj_possible_action_id
 
         self.obj_action_space = {}
         for k,v in self.obj_possible_action_id.items(): 
