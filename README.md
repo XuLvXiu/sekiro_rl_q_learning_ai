@@ -186,7 +186,7 @@ python main.py
 
 - X 图片 y 按键 分类项目 https://github.com/XuLvXiu/sekiro_classifier_ai
 - 蒙特卡洛项目 https://github.com/XuLvXiu/sekiro_rl_mc_ai
-- 时序差分 Sarsa 项目 https://github.com/XuLvXiu/sekiro_rl_td_ai
+- 时序差分 Sarsa 项目(含 X 图片 y 人工标签分类) https://github.com/XuLvXiu/sekiro_rl_td_ai
 
 
 
